@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import url('https://cdn.rawgit.com/moonspam/NanumSquare/master/nanumsquare.css');
+
+:root {
+    --primary-color: #f0fd82;
+    --primary-hover: #e6f066;
+    --success-color: #2ed573;
+    --error-color: #ff4757;
+    --text-color: #333;
+    --border-color: #e0e0e0;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'NanumSquare', sans-serif;
+    background-color: #f9f9f9;
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+/* 공통 유틸리티 클래스 */
+.container {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.card {
+    @apply bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-medium border border-primary/30;
+}
+
+.btn-primary {
+    @apply bg-primary text-gray-800 border-none py-4 px-6 rounded-xl text-base font-semibold cursor-pointer transition-all duration-200 hover:bg-primary-hover hover:-translate-y-0.5;
+}
+
+.btn-success {
+    @apply bg-success text-white border-none py-4 px-6 rounded-xl text-base font-semibold cursor-pointer transition-all duration-200 hover:bg-green-600 hover:-translate-y-0.5;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+    
+    .card {
+        @apply p-6;
+    }
+}
+
+/* 로딩 스피너 */
+.loading-spinner {
+    @apply inline-block w-4 h-4 border-2 border-gray-300 border-t-primary rounded-full animate-spin;
+}
+
+/* 커스텀 스크롤바 */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-hover);
+}

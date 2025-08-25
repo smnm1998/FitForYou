@@ -1,0 +1,117 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// 회원정보
+model User {
+  id         Int      @id @default(autoincrement()) @map("member_id")
+  userId     String   @unique @map("user_id") @db.VarChar(40)
+  password   String   @db.VarChar(60)
+  nickname   String   @db.VarChar(30)
+  gender     Gender
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // 관계
+  addInfo      AddInfo?
+  aiChats      AiChat[]
+  savedDiets   SavedDiet[]
+  savedWorkouts SavedWorkout[]
+
+  @@index([userId])
+  @@index([nickname])
+  @@map("user")
+}
+
+// 신체정보
+model AddInfo {
+  id       Int     @id @default(autoincrement()) @map("info_id")
+  userId   Int     @unique @map("member_id")
+  height   Int?
+  weight   Int?
+  disease  String? @db.VarChar(200)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("add_info")
+}
+
+// AI 채팅 기록
+model AiChat {
+  id         Int           @id @default(autoincrement()) @map("chat_id")
+  userId     Int           @map("member_id")
+  promptType PromptType    @map("prompt_type")
+  userInput  String        @map("user_input") @db.Text
+  aiResponse String        @map("ai_response") @db.Text
+  createdAt  DateTime      @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, promptType])
+  @@index([createdAt])
+  @@map("ai_chat")
+}
+
+// 저장된 식단
+model SavedDiet {
+  id            Int      @id @default(autoincrement()) @map("diet_id")
+  userId        Int      @map("member_id")
+  date          DateTime @db.Date
+  breakfast     String?  @db.Text
+  lunch         String?  @db.Text
+  dinner        String?  @db.Text
+  snack         String?  @db.Text
+  totalCalories Int?     @map("total_calories")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([createdAt])
+  @@map("saved_diets")
+}
+
+// 저장된 운동
+model SavedWorkout {
+  id                Int       @id @default(autoincrement()) @map("workout_id")
+  userId            Int       @map("member_id")
+  date              DateTime  @db.Date
+  workoutType       String?   @map("workout_type") @db.VarChar(100)
+  duration          String?   @db.VarChar(20)
+  intensity         Intensity?
+  targetMuscles     String?   @map("target_muscles") @db.Text
+  exercises         String?   @db.Text
+  estimatedCalories Int?      @map("estimated_calories")
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([workoutType])
+  @@index([intensity])
+  @@index([createdAt])
+  @@map("saved_workouts")
+}
+
+// Enums
+enum Gender {
+  male
+  female
+}
+
+enum PromptType {
+  diet
+  workout
+  general
+}
+
+enum Intensity {
+  low
+  medium
+  high
+}
