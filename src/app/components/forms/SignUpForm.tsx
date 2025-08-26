@@ -177,7 +177,6 @@ export default function SignUpForm() {
             console.log("📤 요청 보내는 아이디:", userIdValue);
 
             const response = await apiClient.checkUserId(userIdValue);
-            );
             console.log("📥 받은 응답:", response);
 
             if (response.success && response.available) {

@@ -27,6 +27,7 @@ export interface UserProfile {
 }
 
 export interface ApiResponse<T = unknown> {
+    available: boolean;
     success: boolean;
     data?: T;
     message: string;
