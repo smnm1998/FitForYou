@@ -19,6 +19,7 @@ interface SignUpFormData {
     height?: number;
     weight?: number;
     nickname?: string;
+    disease?: string; // `disease` 필드를 타입에 추가
 }
 
 // 아이디 중복 확인 API 응답 타입
@@ -93,6 +94,12 @@ const fullSchema = yup
                     .min(3, "닉네임은 3자 이상이어야 합니다."),
             otherwise: (schema) => schema.notRequired(),
         }),
+        // disease 필드에 대한 유효성 검사 추가 (현재는 선택사항)
+        disease: yup.string().when("$currentStep", {
+            is: (step: number) => step >= 5, // 예시: 5단계에서 함께 입력받는다고 가정
+            then: (schema) => schema.optional(),
+            otherwise: (schema) => schema.notRequired(),
+        }),
     })
     .required();
 
@@ -158,7 +165,8 @@ export default function SignUpForm() {
         // 최종 제출 전, 모든 필수 데이터가 있는지 다시 한번 확인합니다.
         // yup 스키마가 이를 보장하지만, 타입스크립트의 strict 모드와
         // 예기치 않은 엣지 케이스를 위해 방어적인 코드를 추가합니다.
-        const { userId, password, nickname, gender, height, weight } = data;
+        const { userId, password, nickname, gender, height, weight, disease } =
+            data;
         if (!userId || !password || !nickname || !gender) {
             toast.error("필수 정보가 누락되었습니다. 다시 시도해주세요.");
             console.error("최종 제출 데이터 오류:", data);
@@ -175,6 +183,7 @@ export default function SignUpForm() {
                 gender,
                 height,
                 weight,
+                disease, // 누락되었던 disease 필드 추가
             };
 
             const response = await apiClient.signUp(signUpData);

@@ -1,48 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useForm, SubmitHandler } from "react-hook-form";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { toast } from "react-hot-toast";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 
 interface SignInFormData {
     userId: string;
     password: string;
 }
 
+const schema = yup
+    .object({
+        userId: yup.string().required("아이디를 입력해주세요."),
+        password: yup.string().required("비밀번호를 입력해주세요."),
+    })
+    .required();
+
 export default function SignInForm() {
     const router = useRouter();
-    const [formData, setFormData] = useState<SignInFormData>({
-        userId: "",
-        password: "",
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isSubmitting },
+    } = useForm<SignInFormData>({
+        resolver: yupResolver(schema),
     });
-    const [isLoading, setIsLoading] = useState(false);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (!formData.userId || !formData.password) {
-            toast.error("아이디와 비밀번호를 입력해주세요.");
-            return;
-        }
-
-        setIsLoading(true);
-
+    const onSubmit: SubmitHandler<SignInFormData> = async (data) => {
         try {
             const result = await signIn("credentials", {
-                userId: formData.userId,
-                password: formData.password,
+                userId: data.userId,
+                password: data.password,
                 redirect: false,
             });
 
@@ -57,8 +51,6 @@ export default function SignInForm() {
         } catch (error) {
             toast.error("로그인 중 오류가 발생했습니다.");
             console.error("Sign in error:", error);
-        } finally {
-            setIsLoading(false);
         }
     };
 
@@ -86,44 +78,62 @@ export default function SignInForm() {
             </div>
 
             {/* 로그인 폼 */}
-            <form onSubmit={handleSubmit} className="w-full space-y-5">
+            <form
+                onSubmit={handleSubmit(onSubmit)}
+                className="w-full space-y-5"
+            >
                 <div className="space-y-4">
-                    <input
-                        type="text"
-                        name="userId"
-                        placeholder="아이디"
-                        value={formData.userId}
-                        onChange={handleInputChange}
-                        className="w-full p-4 border-2 border-gray-200 rounded-xl 
-                        focus:border-primary focus:outline-none 
-                        transition-colors duration-200 text-base font-medium"
-                        required
-                        disabled={isLoading}
-                    />
-
-                    <input
-                        type="password"
-                        name="password"
-                        placeholder="비밀번호"
-                        value={formData.password}
-                        onChange={handleInputChange}
-                        className="w-full p-4 border-2 border-gray-200 rounded-xl 
-                        focus:border-primary focus:outline-none 
-                        transition-colors duration-200 text-base font-medium"
-                        required
-                        disabled={isLoading}
-                    />
+                    <div>
+                        <input
+                            type="text"
+                            {...register("userId")}
+                            placeholder="아이디"
+                            className={`w-full p-4 border-2 rounded-xl 
+                            focus:outline-none transition-colors duration-200 text-base font-medium
+                            ${
+                                errors.userId
+                                    ? "border-error"
+                                    : "border-gray-200 focus:border-primary"
+                            }`}
+                            disabled={isSubmitting}
+                        />
+                        {errors.userId && (
+                            <p className="text-error text-sm font-medium mt-1">
+                                {errors.userId.message}
+                            </p>
+                        )}
+                    </div>
+                    <div>
+                        <input
+                            type="password"
+                            {...register("password")}
+                            placeholder="비밀번호"
+                            className={`w-full p-4 border-2 rounded-xl 
+                            focus:outline-none transition-colors duration-200 text-base font-medium
+                            ${
+                                errors.password
+                                    ? "border-error"
+                                    : "border-gray-200 focus:border-primary"
+                            }`}
+                            disabled={isSubmitting}
+                        />
+                        {errors.password && (
+                            <p className="text-error text-sm font-medium mt-1">
+                                {errors.password.message}
+                            </p>
+                        )}
+                    </div>
                 </div>
 
                 <button
                     type="submit"
-                    disabled={isLoading}
+                    disabled={isSubmitting}
                     className="w-full py-4 bg-primary text-gray-800 font-semibold rounded-xl
                         hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed
                         transition-all duration-200 hover:transform hover:-translate-y-0.5
                         shadow-md hover:shadow-lg text-base sm:text-lg"
                 >
-                    {isLoading ? (
+                    {isSubmitting ? (
                         <span className="flex items-center justify-center">
                             <div className="loading-spinner mr-2"></div>
                             로그인 중...
