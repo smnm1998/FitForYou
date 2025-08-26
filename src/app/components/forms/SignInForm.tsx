@@ -46,6 +46,7 @@ export default function SignInForm() {
                 );
             } else {
                 toast.success("로그인 성공!");
+                router.refresh();
                 router.push("/collection");
             }
         } catch (error) {
