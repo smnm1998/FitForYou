@@ -1,57 +1,71 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { 
-    UserIcon, 
-    HeartIcon, 
-    Cog6ToothIcon, 
+import { useState } from "react";
+import {
+    UserIcon,
+    HeartIcon,
+    Cog6ToothIcon,
     ArrowRightOnRectangleIcon,
     PencilIcon,
     TrashIcon,
     XMarkIcon,
-    CheckIcon
-} from '@heroicons/react/24/outline';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { signOut, useSession } from 'next-auth/react';
-import { toast } from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
-import { apiClient } from '@/lib/api-client';
+} from "@heroicons/react/24/outline";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { signOut, useSession } from "next-auth/react";
+import { toast } from "react-hot-toast";
+import { apiClient } from "@/lib/api-client";
+
+// 사용자 프로필 타입 정의 (간단화)
+interface UserProfile {
+    nickname?: string;
+    gender?: string;
+    createdAt?: string;
+    addInfo?: {
+        height?: number;
+        weight?: number;
+        disease?: string;
+    };
+}
 
 // 프로필 편집 모달 컴포넌트
-function EditProfileModal({ 
-    isOpen, 
-    onClose, 
-    userProfile 
-}: { 
-    isOpen: boolean; 
-    onClose: () => void; 
-    userProfile: any;
+function EditProfileModal({
+    isOpen,
+    onClose,
+    userProfile,
+}: {
+    isOpen: boolean;
+    onClose: () => void;
+    userProfile?: UserProfile; // 간단화
 }) {
     const [formData, setFormData] = useState({
-        nickname: userProfile?.nickname || '',
-        height: userProfile?.addInfo?.height || '',
-        weight: userProfile?.addInfo?.weight || '',
-        disease: userProfile?.addInfo?.disease || '',
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
+        nickname: userProfile?.nickname || "",
+        height: userProfile?.addInfo?.height?.toString() || "",
+        weight: userProfile?.addInfo?.weight?.toString() || "",
+        disease: userProfile?.addInfo?.disease || "",
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
     });
     const [isPasswordChange, setIsPasswordChange] = useState(false);
 
     const queryClient = useQueryClient();
 
     const updateProfileMutation = useMutation({
-        mutationFn: async (data: any) => {
+        mutationFn: async (data: Record<string, unknown>) => {
             return apiClient.updateProfile(data);
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['user-profile'] });
-            toast.success('프로필이 성공적으로 업데이트되었습니다!');
+            queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+            toast.success("프로필이 성공적으로 업데이트되었습니다!");
             onClose();
         },
-        onError: (error: any) => {
-            toast.error(error.message || '프로필 업데이트 중 오류가 발생했습니다.');
-        }
+        onError: (error: unknown) => {
+            const errorMessage =
+                error instanceof Error
+                    ? error.message
+                    : "프로필 업데이트 중 오류가 발생했습니다.";
+            toast.error(errorMessage);
+        },
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -59,15 +73,15 @@ function EditProfileModal({
 
         if (isPasswordChange) {
             if (!formData.currentPassword) {
-                toast.error('현재 비밀번호를 입력해주세요.');
+                toast.error("현재 비밀번호를 입력해주세요.");
                 return;
             }
             if (formData.newPassword !== formData.confirmPassword) {
-                toast.error('새 비밀번호가 일치하지 않습니다.');
+                toast.error("새 비밀번호가 일치하지 않습니다.");
                 return;
             }
             if (formData.newPassword.length < 8) {
-                toast.error('새 비밀번호는 8자 이상이어야 합니다.');
+                toast.error("새 비밀번호는 8자 이상이어야 합니다.");
                 return;
             }
         }
@@ -79,8 +93,8 @@ function EditProfileModal({
             disease: formData.disease,
             ...(isPasswordChange && {
                 currentPassword: formData.currentPassword,
-                newPassword: formData.newPassword
-            })
+                newPassword: formData.newPassword,
+            }),
         };
 
         updateProfileMutation.mutate(updateData);
@@ -92,8 +106,13 @@ function EditProfileModal({
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-5">
             <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center p-6 border-b">
-                    <h2 className="text-xl font-bold text-gray-800">프로필 편집</h2>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full">
+                    <h2 className="text-xl font-bold text-gray-800">
+                        프로필 편집
+                    </h2>
+                    <button
+                        onClick={onClose}
+                        className="p-2 hover:bg-gray-100 rounded-full"
+                    >
                         <XMarkIcon className="w-5 h-5" />
                     </button>
                 </div>
@@ -101,11 +120,18 @@ function EditProfileModal({
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
                     {/* 닉네임 */}
                     <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">닉네임</label>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            닉네임
+                        </label>
                         <input
                             type="text"
                             value={formData.nickname}
-                            onChange={(e) => setFormData(prev => ({...prev, nickname: e.target.value}))}
+                            onChange={(e) =>
+                                setFormData((prev) => ({
+                                    ...prev,
+                                    nickname: e.target.value,
+                                }))
+                            }
                             className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:outline-none"
                             required
                         />
@@ -114,21 +140,35 @@ function EditProfileModal({
                     {/* 신체 정보 */}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">키 (cm)</label>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                키 (cm)
+                            </label>
                             <input
                                 type="number"
                                 value={formData.height}
-                                onChange={(e) => setFormData(prev => ({...prev, height: e.target.value}))}
+                                onChange={(e) =>
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        height: e.target.value,
+                                    }))
+                                }
                                 className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:outline-none"
                                 placeholder="170"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">몸무게 (kg)</label>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                몸무게 (kg)
+                            </label>
                             <input
                                 type="number"
                                 value={formData.weight}
-                                onChange={(e) => setFormData(prev => ({...prev, weight: e.target.value}))}
+                                onChange={(e) =>
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        weight: e.target.value,
+                                    }))
+                                }
                                 className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:outline-none"
                                 placeholder="70"
                             />
@@ -137,10 +177,17 @@ function EditProfileModal({
 
                     {/* 건강 상태 */}
                     <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">건강 상태/제한사항</label>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            건강 상태/제한사항
+                        </label>
                         <textarea
                             value={formData.disease}
-                            onChange={(e) => setFormData(prev => ({...prev, disease: e.target.value}))}
+                            onChange={(e) =>
+                                setFormData((prev) => ({
+                                    ...prev,
+                                    disease: e.target.value,
+                                }))
+                            }
                             className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:outline-none resize-none"
                             rows={3}
                             placeholder="알레르기, 질병, 기타 제한사항이 있다면 입력해주세요"
@@ -153,10 +200,14 @@ function EditProfileModal({
                             <input
                                 type="checkbox"
                                 checked={isPasswordChange}
-                                onChange={(e) => setIsPasswordChange(e.target.checked)}
+                                onChange={(e) =>
+                                    setIsPasswordChange(e.target.checked)
+                                }
                                 className="w-4 h-4"
                             />
-                            <span className="text-sm font-semibold text-gray-700">비밀번호 변경</span>
+                            <span className="text-sm font-semibold text-gray-700">
+                                비밀번호 변경
+                            </span>
                         </label>
                     </div>
 
@@ -164,32 +215,53 @@ function EditProfileModal({
                     {isPasswordChange && (
                         <div className="space-y-3">
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">현재 비밀번호</label>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    현재 비밀번호
+                                </label>
                                 <input
                                     type="password"
                                     value={formData.currentPassword}
-                                    onChange={(e) => setFormData(prev => ({...prev, currentPassword: e.target.value}))}
+                                    onChange={(e) =>
+                                        setFormData((prev) => ({
+                                            ...prev,
+                                            currentPassword: e.target.value,
+                                        }))
+                                    }
                                     className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:outline-none"
                                     required={isPasswordChange}
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">새 비밀번호</label>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    새 비밀번호
+                                </label>
                                 <input
                                     type="password"
                                     value={formData.newPassword}
-                                    onChange={(e) => setFormData(prev => ({...prev, newPassword: e.target.value}))}
+                                    onChange={(e) =>
+                                        setFormData((prev) => ({
+                                            ...prev,
+                                            newPassword: e.target.value,
+                                        }))
+                                    }
                                     className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:outline-none"
                                     required={isPasswordChange}
                                     minLength={8}
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">새 비밀번호 확인</label>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    새 비밀번호 확인
+                                </label>
                                 <input
                                     type="password"
                                     value={formData.confirmPassword}
-                                    onChange={(e) => setFormData(prev => ({...prev, confirmPassword: e.target.value}))}
+                                    onChange={(e) =>
+                                        setFormData((prev) => ({
+                                            ...prev,
+                                            confirmPassword: e.target.value,
+                                        }))
+                                    }
                                     className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:outline-none"
                                     required={isPasswordChange}
                                 />
@@ -211,7 +283,9 @@ function EditProfileModal({
                             disabled={updateProfileMutation.isPending}
                             className="flex-1 btn-success disabled:opacity-50"
                         >
-                            {updateProfileMutation.isPending ? '저장 중...' : '저장'}
+                            {updateProfileMutation.isPending
+                                ? "저장 중..."
+                                : "저장"}
                         </button>
                     </div>
                 </form>
@@ -222,15 +296,17 @@ function EditProfileModal({
 
 export default function ProfilePage() {
     const { data: session } = useSession();
-    const router = useRouter();
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [deletePassword, setDeletePassword] = useState('');
+    const [deletePassword, setDeletePassword] = useState("");
 
-    // 사용자 프로필 조회
+    // 사용자 프로필 조회 (타입 간소화)
     const { data: profileData, isLoading } = useQuery({
-        queryKey: ['user-profile'],
-        queryFn: () => apiClient.getProfile(),
+        queryKey: ["user-profile"],
+        queryFn: async () => {
+            const response = await apiClient.getProfile();
+            return response.data as UserProfile; // 직접 캐스팅
+        },
         enabled: !!session,
     });
 
@@ -240,43 +316,49 @@ export default function ProfilePage() {
             return apiClient.deleteAccount(password);
         },
         onSuccess: () => {
-            toast.success('회원 탈퇴가 완료되었습니다.');
-            signOut({ callbackUrl: '/' });
+            toast.success("회원 탈퇴가 완료되었습니다.");
+            signOut({ callbackUrl: "/" });
         },
-        onError: (error: any) => {
-            toast.error(error.message || '회원 탈퇴 중 오류가 발생했습니다.');
-        }
+        onError: (error: unknown) => {
+            const errorMessage =
+                error instanceof Error
+                    ? error.message
+                    : "회원 탈퇴 중 오류가 발생했습니다.";
+            toast.error(errorMessage);
+        },
     });
 
-    const userProfile = profileData?.data;
-
     const handleLogout = async () => {
-        if (confirm('로그아웃 하시겠습니까?')) {
-            await signOut({ callbackUrl: '/' });
-            toast.success('로그아웃되었습니다.');
+        if (confirm("로그아웃 하시겠습니까?")) {
+            await signOut({ callbackUrl: "/" });
+            toast.success("로그아웃되었습니다.");
         }
     };
 
     const handleDeleteAccount = async () => {
         if (!deletePassword) {
-            toast.error('비밀번호를 입력해주세요.');
+            toast.error("비밀번호를 입력해주세요.");
             return;
         }
 
-        if (confirm('정말로 회원 탈퇴하시겠습니까? 모든 데이터가 삭제됩니다.')) {
+        if (
+            confirm("정말로 회원 탈퇴하시겠습니까? 모든 데이터가 삭제됩니다.")
+        ) {
             deleteAccountMutation.mutate(deletePassword);
         }
     };
 
     const formatGender = (gender: string) => {
-        return gender === 'male' ? '남성' : '여성';
+        return gender === "male" ? "남성" : "여성";
     };
 
     const calculateAge = (createdAt: string) => {
-        // 간단한 가입일 기준 표시 (실제로는 생년월일이 있어야 함)
         const created = new Date(createdAt);
         const now = new Date();
-        const diffMonths = (now.getFullYear() - created.getFullYear()) * 12 + now.getMonth() - created.getMonth();
+        const diffMonths =
+            (now.getFullYear() - created.getFullYear()) * 12 +
+            now.getMonth() -
+            created.getMonth();
         return `가입 ${diffMonths}개월차`;
     };
 
@@ -304,9 +386,10 @@ export default function ProfilePage() {
     return (
         <div className="min-h-screen bg-gray-50 pb-24">
             <div className="max-w-2xl mx-auto px-5 pt-20">
-                
                 <header className="text-left mb-6">
-                    <h1 className="text-3xl font-black text-gray-800">나의정보</h1>
+                    <h1 className="text-3xl font-black text-gray-800">
+                        나의정보
+                    </h1>
                 </header>
 
                 {/* 프로필 카드 */}
@@ -318,18 +401,25 @@ export default function ProfilePage() {
                             </div>
                             <div className="flex-1">
                                 <h2 className="text-xl font-bold text-gray-800 mb-1">
-                                    {userProfile?.nickname || '사용자'}님
+                                    {profileData?.nickname || "사용자"}님
                                 </h2>
                                 <p className="text-gray-600 text-sm mb-2">
-                                    {userProfile?.gender && formatGender(userProfile.gender)} • {' '}
-                                    {userProfile?.createdAt && calculateAge(userProfile.createdAt)}
+                                    {profileData?.gender &&
+                                        formatGender(profileData.gender)}{" "}
+                                    •{" "}
+                                    {profileData?.createdAt &&
+                                        calculateAge(profileData.createdAt)}
                                 </p>
                                 <div className="flex gap-4 text-sm text-gray-600">
-                                    {userProfile?.addInfo?.height && (
-                                        <span>{userProfile.addInfo.height}cm</span>
+                                    {profileData?.addInfo?.height && (
+                                        <span>
+                                            {profileData.addInfo.height}cm
+                                        </span>
                                     )}
-                                    {userProfile?.addInfo?.weight && (
-                                        <span>{userProfile.addInfo.weight}kg</span>
+                                    {profileData?.addInfo?.weight && (
+                                        <span>
+                                            {profileData.addInfo.weight}kg
+                                        </span>
                                     )}
                                 </div>
                             </div>
@@ -341,10 +431,14 @@ export default function ProfilePage() {
                             </button>
                         </div>
 
-                        {userProfile?.addInfo?.disease && (
+                        {profileData?.addInfo?.disease && (
                             <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
-                                <h4 className="font-semibold text-gray-800 mb-1">건강 정보</h4>
-                                <p className="text-sm text-gray-600">{userProfile.addInfo.disease}</p>
+                                <h4 className="font-semibold text-gray-800 mb-1">
+                                    건강 정보
+                                </h4>
+                                <p className="text-sm text-gray-600">
+                                    {profileData.addInfo.disease}
+                                </p>
                             </div>
                         )}
                     </div>
@@ -352,21 +446,24 @@ export default function ProfilePage() {
 
                 {/* 메뉴 섹션 */}
                 <section className="mb-6 space-y-3">
-                    
                     <div className="card p-5 hover:shadow-lg transition-all duration-200 cursor-pointer hover:transform hover:-translate-y-1">
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center">
                                 <HeartIcon className="w-6 h-6 text-red-500" />
                             </div>
                             <div className="flex-1">
-                                <h3 className="font-bold text-gray-800 mb-1">저장한 식단 & 운동</h3>
-                                <p className="text-sm text-gray-600">즐겨찾기한 항목들을 확인하세요</p>
+                                <h3 className="font-bold text-gray-800 mb-1">
+                                    저장한 식단 & 운동
+                                </h3>
+                                <p className="text-sm text-gray-600">
+                                    즐겨찾기한 항목들을 확인하세요
+                                </p>
                             </div>
                             <div className="text-gray-400 text-xl">›</div>
                         </div>
                     </div>
 
-                    <div 
+                    <div
                         className="card p-5 hover:shadow-lg transition-all duration-200 cursor-pointer hover:transform hover:-translate-y-1"
                         onClick={() => setIsEditModalOpen(true)}
                     >
@@ -375,8 +472,12 @@ export default function ProfilePage() {
                                 <Cog6ToothIcon className="w-6 h-6 text-blue-500" />
                             </div>
                             <div className="flex-1">
-                                <h3 className="font-bold text-gray-800 mb-1">개인정보 수정</h3>
-                                <p className="text-sm text-gray-600">키, 몸무게, 건강정보 등을 변경하세요</p>
+                                <h3 className="font-bold text-gray-800 mb-1">
+                                    개인정보 수정
+                                </h3>
+                                <p className="text-sm text-gray-600">
+                                    키, 몸무게, 건강정보 등을 변경하세요
+                                </p>
                             </div>
                             <div className="text-gray-400 text-xl">›</div>
                         </div>
@@ -385,23 +486,27 @@ export default function ProfilePage() {
 
                 {/* 하단 메뉴 */}
                 <section className="mb-6 space-y-3">
-                    <button 
+                    <button
                         onClick={handleLogout}
                         className="w-full card p-5 bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
                     >
                         <div className="flex items-center justify-center gap-3">
                             <ArrowRightOnRectangleIcon className="w-5 h-5 text-gray-600" />
-                            <span className="font-semibold text-gray-600">로그아웃</span>
+                            <span className="font-semibold text-gray-600">
+                                로그아웃
+                            </span>
                         </div>
                     </button>
 
-                    <button 
+                    <button
                         onClick={() => setIsDeleteModalOpen(true)}
                         className="w-full card p-5 bg-red-50 hover:bg-red-100 border border-red-200 transition-colors duration-200"
                     >
                         <div className="flex items-center justify-center gap-3">
                             <TrashIcon className="w-5 h-5 text-red-600" />
-                            <span className="font-semibold text-red-600">회원 탈퇴</span>
+                            <span className="font-semibold text-red-600">
+                                회원 탈퇴
+                            </span>
                         </div>
                     </button>
                 </section>
@@ -414,10 +519,10 @@ export default function ProfilePage() {
             </div>
 
             {/* 프로필 편집 모달 */}
-            <EditProfileModal 
+            <EditProfileModal
                 isOpen={isEditModalOpen}
                 onClose={() => setIsEditModalOpen(false)}
-                userProfile={userProfile}
+                userProfile={profileData}
             />
 
             {/* 회원 탈퇴 모달 */}
@@ -428,9 +533,12 @@ export default function ProfilePage() {
                             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <TrashIcon className="w-8 h-8 text-red-600" />
                             </div>
-                            <h2 className="text-xl font-bold text-gray-800 mb-2">회원 탈퇴</h2>
+                            <h2 className="text-xl font-bold text-gray-800 mb-2">
+                                회원 탈퇴
+                            </h2>
                             <p className="text-gray-600 text-sm leading-relaxed">
-                                정말로 회원 탈퇴하시겠습니까?<br />
+                                정말로 회원 탈퇴하시겠습니까?
+                                <br />
                                 모든 데이터가 영구적으로 삭제됩니다.
                             </p>
                         </div>
@@ -442,7 +550,9 @@ export default function ProfilePage() {
                             <input
                                 type="password"
                                 value={deletePassword}
-                                onChange={(e) => setDeletePassword(e.target.value)}
+                                onChange={(e) =>
+                                    setDeletePassword(e.target.value)
+                                }
                                 className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-red-400 focus:outline-none"
                                 placeholder="비밀번호"
                             />
@@ -452,7 +562,7 @@ export default function ProfilePage() {
                             <button
                                 onClick={() => {
                                     setIsDeleteModalOpen(false);
-                                    setDeletePassword('');
+                                    setDeletePassword("");
                                 }}
                                 className="flex-1 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300"
                             >
@@ -463,7 +573,9 @@ export default function ProfilePage() {
                                 disabled={deleteAccountMutation.isPending}
                                 className="flex-1 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 disabled:opacity-50"
                             >
-                                {deleteAccountMutation.isPending ? '처리 중...' : '탈퇴하기'}
+                                {deleteAccountMutation.isPending
+                                    ? "처리 중..."
+                                    : "탈퇴하기"}
                             </button>
                         </div>
                     </div>
