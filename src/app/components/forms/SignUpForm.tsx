@@ -249,8 +249,6 @@ export default function SignUpForm() {
                 toast.error("닉네임을 입력해주세요.");
                 return;
             }
-
-            // apiClient에 checkNickname이 구현되어 있다고 가정합니다.
             const response: CheckNicknameResponse =
                 await apiClient.checkNickname(nicknameValue);
 
