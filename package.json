@@ -4,7 +4,7 @@
     "private": true,
     "scripts": {
         "dev": "next dev",
-        "build": "prisma migrate deploy && prisma generate && next build",
+        "build": "prisma generate && next build",
         "start": "next start",
         "lint": "next lint",
         "db:push": "prisma db push",
@@ -29,6 +29,7 @@
         "next-auth": "^4.24.5",
         "openai": "^4.20.1",
         "postcss": "^8.4.32",
+        "postgresql": "^0.0.1",
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
         "react-hook-form": "^7.48.2",
