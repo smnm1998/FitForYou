@@ -28,6 +28,13 @@ interface CheckUserIdResponse {
     message?: string;
 }
 
+// 닉네임 중복 확인 API 응답 타입
+interface CheckNicknameResponse {
+    success: boolean;
+    available?: boolean;
+    message?: string;
+}
+
 // Yup 스키마 정의
 const fullSchema = yup
     .object()
@@ -93,6 +100,7 @@ export default function SignUpForm() {
     const router = useRouter();
     const [currentStep, setCurrentStep] = useState(1);
     const [isUserIdChecked, setIsUserIdChecked] = useState(false);
+    const [isNicknameChecked, setIsNicknameChecked] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const {
@@ -127,18 +135,46 @@ export default function SignUpForm() {
         }
     }, [watchedUserId, touchedFields.userId]);
 
+    // 닉네임 값 변경 감지 시 중복 확인 상태 초기화
+    const watchedNickname = watch("nickname");
+    useEffect(() => {
+        if (touchedFields.nickname) {
+            setIsNicknameChecked(false);
+        }
+    }, [watchedNickname, touchedFields.nickname]);
+
     // 최종 폼 제출 핸들러
     const onSubmit: SubmitHandler<SignUpFormData> = async (data) => {
+        // 닉네임 중복 확인 여부 체크
+        if (currentStep === 5 && !isNicknameChecked) {
+            toast.error("닉네임 중복 확인을 해주세요.");
+            setError("nickname", {
+                type: "manual",
+                message: "닉네임 중복 확인을 해주세요.",
+            });
+            return;
+        }
+
+        // 최종 제출 전, 모든 필수 데이터가 있는지 다시 한번 확인합니다.
+        // yup 스키마가 이를 보장하지만, 타입스크립트의 strict 모드와
+        // 예기치 않은 엣지 케이스를 위해 방어적인 코드를 추가합니다.
+        const { userId, password, nickname, gender, height, weight } = data;
+        if (!userId || !password || !nickname || !gender) {
+            toast.error("필수 정보가 누락되었습니다. 다시 시도해주세요.");
+            console.error("최종 제출 데이터 오류:", data);
+            return;
+        }
+
         setIsSubmitting(true);
 
         try {
             const signUpData = {
-                userId: data.userId,
-                password: data.password!,
-                nickname: data.nickname!,
-                gender: data.gender!,
-                height: data.height,
-                weight: data.weight,
+                userId,
+                password,
+                nickname,
+                gender,
+                height,
+                weight,
             };
 
             const response = await apiClient.signUp(signUpData);
@@ -195,6 +231,44 @@ export default function SignUpForm() {
             console.error("❌ 아이디 확인 에러:", error);
             toast.error("아이디 확인 중 오류가 발생했습니다.");
             setIsUserIdChecked(false);
+        }
+    };
+
+    // 닉네임 중복 확인 핸들러
+    const handleCheckNickname = async () => {
+        const isValidSyntax = await trigger("nickname");
+        if (!isValidSyntax) {
+            setIsNicknameChecked(false);
+            return;
+        }
+
+        try {
+            const nicknameValue = getValues("nickname");
+            // nicknameValue가 undefined일 수 있으므로, API 호출 전에 확인합니다.
+            if (!nicknameValue) {
+                toast.error("닉네임을 입력해주세요.");
+                return;
+            }
+
+            // apiClient에 checkNickname이 구현되어 있다고 가정합니다.
+            const response: CheckNicknameResponse =
+                await apiClient.checkNickname(nicknameValue);
+
+            if (response.success && response.available) {
+                clearErrors("nickname");
+                setIsNicknameChecked(true);
+                toast.success("사용 가능한 닉네임입니다.");
+            } else {
+                setError("nickname", {
+                    type: "manual",
+                    message: response.message || "이미 사용 중인 닉네임입니다.",
+                });
+                setIsNicknameChecked(false);
+            }
+        } catch (error) {
+            console.error("❌ 닉네임 확인 에러:", error);
+            toast.error("닉네임 확인 중 오류가 발생했습니다.");
+            setIsNicknameChecked(false);
         }
     };
 
@@ -473,22 +547,38 @@ export default function SignUpForm() {
                         {/* 5단계: 닉네임 */}
                         {currentStep === 5 && (
                             <div className="space-y-4">
-                                <input
-                                    id="nickname"
-                                    type="text"
-                                    {...register("nickname")}
-                                    className={`w-full p-4 border-2 rounded-xl text-base font-medium 
+                                <div className="relative">
+                                    <input
+                                        id="nickname"
+                                        type="text"
+                                        {...register("nickname")}
+                                        className={`w-full p-4 pr-24 border-2 rounded-xl text-base font-medium 
                                 transition-colors duration-200 focus:outline-none
                                 ${
                                     errors.nickname
                                         ? "border-error"
                                         : "border-gray-200 focus:border-primary"
                                 }`}
-                                    placeholder="3~10자리 입력"
-                                />
+                                        placeholder="3~10자리 입력"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleCheckNickname}
+                                        className="absolute right-2 top-2 px-3 py-2 bg-primary text-gray-800 
+                                font-semibold rounded-lg text-sm hover:bg-primary-hover 
+                                transition-colors duration-200"
+                                    >
+                                        중복확인
+                                    </button>
+                                </div>
                                 {errors.nickname && (
                                     <p className="text-error text-sm font-medium">
                                         {errors.nickname.message}
+                                    </p>
+                                )}
+                                {isNicknameChecked && !errors.nickname && (
+                                    <p className="text-success text-sm font-medium">
+                                        사용 가능한 닉네임입니다.
                                     </p>
                                 )}
                             </div>

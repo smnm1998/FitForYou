@@ -1,43 +1,42 @@
-import { NextRequest, NextResponse } from 'next/server'
-import bcrypt from 'bcryptjs'
-import { prisma } from '@/lib/prisma'
-import { SignupData } from '@/types'
+import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/prisma";
+import { SignupData } from "@/types";
 
 export async function POST(request: NextRequest) {
     try {
-        const body: SignupData = await request.json()
-        const { userId, password, nickname, gender, height, weight, disease } = body
+        const body: SignupData = await request.json();
+        const { userId, password, nickname, gender, height, weight, disease } =
+            body;
 
         if (!userId || !password || !nickname || !gender) {
             return NextResponse.json(
-                { success: false, error: '필수 정보를 모두 입력해주세요.' },
+                { success: false, error: "필수 정보를 모두 입력해주세요." },
                 { status: 400 }
-            )
+            );
         }
 
-        const existingUser = await prisma.user.findUnique({
-            where: { userId }
-        })
+        // 아이디와 닉네임 중복을 한 번의 쿼리로 확인하여 효율성 증대
+        const existingUser = await prisma.user.findFirst({
+            where: {
+                OR: [{ userId }, { nickname }],
+            },
+        });
 
         if (existingUser) {
+            if (existingUser.userId === userId) {
+                return NextResponse.json(
+                    { success: false, error: "이미 사용 중인 아이디입니다." },
+                    { status: 409 }
+                );
+            }
             return NextResponse.json(
-                { success: false, error: '이미 사용 중인 아이디입니다.' },
+                { success: false, error: "이미 사용 중인 닉네임입니다." },
                 { status: 409 }
-            )
+            );
         }
 
-        const existingNickname = await prisma.user.findFirst({
-            where: { nickname }
-        })
-
-        if (existingNickname) {
-            return NextResponse.json(
-                { success: false, error: '이미 사용 중인 닉네임입니다.' },
-                { status: 409 }
-            )
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 12)
+        const hashedPassword = await bcrypt.hash(password, 12);
 
         const user = await prisma.$transaction(async (tx) => {
             const newUser = await tx.user.create({
@@ -46,8 +45,8 @@ export async function POST(request: NextRequest) {
                     password: hashedPassword,
                     nickname,
                     gender,
-                }
-            })
+                },
+            });
 
             if (height || weight || disease) {
                 await tx.addInfo.create({
@@ -56,27 +55,27 @@ export async function POST(request: NextRequest) {
                         height,
                         weight,
                         disease,
-                    }
-                })
+                    },
+                });
             }
-            return newUser
-        })
+            return newUser;
+        });
 
         return NextResponse.json({
             success: true,
-            message: '회원가입이 성공적으로 완료되었습니다.',
+            message: "회원가입이 성공적으로 완료되었습니다.",
             data: {
                 id: user.id,
                 userId: user.userId,
                 nickname: user.nickname,
                 gender: user.gender,
-            }
-        })
+            },
+        });
     } catch (error) {
-        console.error('Signup error: ', error)
+        console.error("Signup error: ", error);
         return NextResponse.json(
-            { success: false, error: '회원가입 중 오류가 발생했습니다.' },
+            { success: false, error: "회원가입 중 오류가 발생했습니다." },
             { status: 500 }
-        )
+        );
     }
 }
