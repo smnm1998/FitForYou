@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns'
+// date-fns를 사용하지 않고 네이티브 Date 객체로 처리
 
 export async function GET(request: NextRequest) {
     try {
@@ -54,10 +54,26 @@ export async function GET(request: NextRequest) {
         const totalWorkouts = workoutGroups.length;
         
         const now = new Date();
-        const weekStart = startOfWeek(now, { weekStartsOn: 1 });
-        const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
-        const monthStart = startOfMonth(now);
-        const monthEnd = endOfMonth(now);
+        
+        // 이번 주 시작 (월요일)
+        const dayOfWeek = now.getDay();
+        const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const weekStart = new Date(now);
+        weekStart.setDate(now.getDate() + daysToMonday);
+        weekStart.setHours(0, 0, 0, 0);
+        
+        // 이번 주 끝 (일요일)  
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        weekEnd.setHours(23, 59, 59, 999);
+        
+        // 이번 달 시작
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        monthStart.setHours(0, 0, 0, 0);
+        
+        // 이번 달 끝
+        const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        monthEnd.setHours(23, 59, 59, 999);
 
         const thisWeekWorkouts = await prisma.savedWorkout.count({
             where: { userId, date: { gte: weekStart, lte: weekEnd } }
