@@ -50,6 +50,13 @@ export const authOptions: NextAuthOptions = {
         signIn: "/signin",
     },
     callbacks: {
+        async redirect({ url, baseUrl }) {
+            // 로그인 성공 후 /collection으로 리다이렉트
+            if (url.startsWith("/") || url.startsWith(baseUrl)) {
+                return `${baseUrl}/collection`;
+            }
+            return baseUrl;
+        },
         async jwt({ token, user }) {
             if (user) {
                 token.userId = user.id;

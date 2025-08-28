@@ -109,17 +109,45 @@ export default function CreatePage() {
         try {
             console.log(`🚀 ${pageType} 생성 작업 시작:`, prompt);
 
-            // 비동기 작업 생성
-            const response = await fetch("/api/jobs", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    jobType: pageType === "diet" ? "DIET_GENERATION" : "WORKOUT_GENERATION",
-                    prompt: prompt.trim(),
-                }),
-            });
+            // 새로운 비동기 작업 시도, 실패시 기존 방식으로 폴백
+            let response;
+            let useAsyncJob = true;
+            
+            try {
+                response = await fetch("/api/jobs", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        jobType: pageType === "diet" ? "DIET_GENERATION" : "WORKOUT_GENERATION",
+                        prompt: prompt.trim(),
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Async job API not available');
+                }
+            } catch (asyncError) {
+                console.warn('🔄 비동기 API 실패, 기존 방식으로 폴백:', asyncError);
+                useAsyncJob = false;
+                
+                // 기존 동기 방식으로 폴백
+                const endpoint = pageType === "diet" 
+                    ? "/api/ai/generate-diet"
+                    : "/api/ai/generate-workout";
+                    
+                response = await fetch(endpoint, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        prompt: prompt.trim(),
+                        saveToDatabase: false,
+                    }),
+                });
+            }
 
             const data = await response.json();
 
@@ -128,19 +156,38 @@ export default function CreatePage() {
             }
 
             if (data.success) {
-                const jobId = data.data.jobId;
-                setCurrentJobId(jobId);
-                
-                toast.success(
-                    `🎉 ${
-                        pageType === "diet" ? "식단" : "운동 계획"
-                    } 생성이 시작되었습니다!`
-                );
-                
-                console.log("✅ 작업 시작됨:", jobId);
-                
-                // 폴링 시작
-                startJobPolling(jobId);
+                if (useAsyncJob && data.data.jobId) {
+                    // 비동기 작업 처리
+                    const jobId = data.data.jobId;
+                    setCurrentJobId(jobId);
+                    
+                    toast.success(
+                        `🎉 ${
+                            pageType === "diet" ? "식단" : "운동 계획"
+                        } 생성이 시작되었습니다!`
+                    );
+                    
+                    console.log("✅ 비동기 작업 시작됨:", jobId);
+                    
+                    // 폴링 시작
+                    startJobPolling(jobId);
+                } else {
+                    // 기존 동기 방식 처리
+                    setIsGenerating(false);
+                    setGeneratedContent({
+                        type: pageType,
+                        data: data.data[pageType] || data.data.diet || data.data.workout,
+                        isLoading: false,
+                    });
+                    
+                    toast.success(
+                        `🎉 ${
+                            pageType === "diet" ? "식단" : "운동 계획"
+                        }이 생성되었습니다!`
+                    );
+                    
+                    console.log("✅ 동기 작업 완료:", data.data);
+                }
                 
                 // 결과 섹션으로 자동 스크롤
                 setTimeout(() => {
