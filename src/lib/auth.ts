@@ -12,34 +12,45 @@ export const authOptions: NextAuthOptions = {
                 password: { label: "Password", type: "password" },
             },
             async authorize(credentials) {
-                if (!credentials?.userId || !credentials?.password) {
+                try {
+                    console.log("🔐 로그인 시도:", credentials?.userId);
+                    
+                    if (!credentials?.userId || !credentials?.password) {
+                        console.log("❌ 인증 정보 누락");
+                        return null;
+                    }
+
+                    const user = await prisma.user.findUnique({
+                        where: { userId: credentials.userId },
+                        include: { addInfo: true },
+                    });
+
+                    if (!user) {
+                        console.log("❌ 사용자 없음:", credentials.userId);
+                        return null;
+                    }
+
+                    const isPasswordValid = await bcrypt.compare(
+                        credentials.password,
+                        user.password
+                    );
+
+                    if (!isPasswordValid) {
+                        console.log("❌ 비밀번호 불일치");
+                        return null;
+                    }
+
+                    console.log("✅ 로그인 성공:", user.nickname);
+                    return {
+                        id: user.id.toString(),
+                        email: user.userId,
+                        name: user.nickname,
+                        image: null,
+                    };
+                } catch (error) {
+                    console.error("❌ 인증 오류:", error);
                     return null;
                 }
-
-                const user = await prisma.user.findUnique({
-                    where: { userId: credentials.userId },
-                    include: { addInfo: true },
-                });
-
-                if (!user) {
-                    return null;
-                }
-
-                const isPasswordValid = await bcrypt.compare(
-                    credentials.password,
-                    user.password
-                );
-
-                if (!isPasswordValid) {
-                    return null;
-                }
-
-                return {
-                    id: user.id.toString(),
-                    email: user.userId,
-                    name: user.nickname,
-                    image: null,
-                };
             },
         }),
     ],
