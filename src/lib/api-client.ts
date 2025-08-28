@@ -129,6 +129,27 @@ class ApiClient {
     async getReports(period: string = 'weekly', type: string = 'all') {
         return this.request(`/stats/reports?period=${period}&type=${type}`);
     }
+
+    // --- 작업 관리 ---
+    async createJob(data: {
+        jobType: 'DIET_GENERATION' | 'WORKOUT_GENERATION';
+        prompt: string;
+        userProfile?: any;
+    }) {
+        return this.request('/jobs', { method: 'POST', body: JSON.stringify(data) });
+    }
+    
+    async getJobStatus(jobId: string) {
+        return this.request(`/jobs/${jobId}`);
+    }
+    
+    async cancelJob(jobId: string) {
+        return this.request(`/jobs/${jobId}`, { method: 'DELETE' });
+    }
+    
+    async saveJobResult(jobId: string) {
+        return this.request(`/jobs/${jobId}/save`, { method: 'POST' });
+    }
 }
 
 export const apiClient = new ApiClient();

@@ -22,6 +22,7 @@ model User {
   aiChats      AiChat[]
   savedDiets   SavedDiet[]
   savedWorkouts SavedWorkout[]
+  aiJobs       AiJob[]
 
   @@index([userId])
   @@index([nickname])
@@ -98,6 +99,41 @@ model SavedWorkout {
   @@map("saved_workouts")
 }
 
+// AI 작업 큐
+model AiJob {
+  id          String     @id @default(uuid()) @map("job_id")
+  userId      Int        @map("member_id")
+  jobType     JobType    @map("job_type")
+  status      JobStatus  @default(PENDING)
+  priority    Int        @default(1)
+  
+  // 입력 데이터
+  prompt      String     @db.Text
+  userProfile Json?      @map("user_profile")
+  
+  // 출력 데이터
+  result      Json?
+  error       String?    @db.Text
+  
+  // 메타데이터
+  attempts    Int        @default(0)
+  maxRetries  Int        @default(3) @map("max_retries")
+  
+  // 타임스탬프
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  startedAt   DateTime?  @map("started_at")
+  completedAt DateTime?  @map("completed_at")
+  
+  // 관계
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, priority])
+  @@index([userId, status])
+  @@index([createdAt])
+  @@map("ai_jobs")
+}
+
 // Enums
 enum Gender {
   male
@@ -114,4 +150,17 @@ enum Intensity {
   low
   medium
   high
+}
+
+enum JobType {
+  DIET_GENERATION
+  WORKOUT_GENERATION
+}
+
+enum JobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
 }

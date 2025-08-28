@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
     TrashIcon,
     CalendarIcon,
@@ -40,6 +40,7 @@ export default function DietPage() {
     const [selectedDiet, setSelectedDiet] = useState<SavedDietItem | null>(
         null
     );
+    const modalContentRef = useRef<HTMLDivElement>(null);
     const queryClient = useQueryClient();
 
     const {
@@ -87,6 +88,17 @@ export default function DietPage() {
 
     const handleDietClick = (diet: SavedDietItem) => setSelectedDiet(diet);
     const handleCloseModal = () => setSelectedDiet(null);
+
+    useEffect(() => {
+        if (selectedDiet && modalContentRef.current) {
+            setTimeout(() => {
+                modalContentRef.current?.scrollTo({
+                    top: 0,
+                    behavior: "smooth"
+                });
+            }, 100);
+        }
+    }, [selectedDiet]);
 
     const formatDate = (dateString: string) =>
         new Date(dateString).toLocaleDateString("ko-KR", {
@@ -236,7 +248,10 @@ export default function DietPage() {
                                 <XMarkIcon className="w-5 h-5 text-gray-600" />
                             </button>
                         </div>
-                        <div className="flex-1 overflow-y-auto p-6">
+                        <div 
+                            ref={modalContentRef}
+                            className="flex-1 overflow-y-auto p-6"
+                        >
                             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {getUpcomingDietPlan(selectedDiet.weeklyDiet)
                                     .length > 0 ? (
