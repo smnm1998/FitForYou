@@ -2,7 +2,6 @@
 
 import { useForm, SubmitHandler } from "react-hook-form";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { toast } from "react-hot-toast";
@@ -23,7 +22,6 @@ const schema = yup
     .required();
 
 export default function SignInForm() {
-    const router = useRouter();
     const {
         register,
         handleSubmit,
@@ -37,17 +35,14 @@ export default function SignInForm() {
             const result = await signIn("credentials", {
                 userId: data.userId,
                 password: data.password,
-                redirect: false,
+                callbackUrl: "/collection",
+                redirect: true,
             });
 
             if (result?.error) {
                 toast.error(
                     "로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요."
                 );
-            } else {
-                toast.success("로그인 성공!");
-                router.refresh();
-                router.push("/collection");
             }
         } catch (error) {
             toast.error("로그인 중 오류가 발생했습니다.");

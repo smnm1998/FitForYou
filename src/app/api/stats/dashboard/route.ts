@@ -4,6 +4,31 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 // date-fns를 사용하지 않고 네이티브 Date 객체로 처리
 
+// 데이터베이스 작업을 재시도하는 헬퍼 함수
+async function retryDatabaseOperation<T>(operation: () => Promise<T>, maxRetries = 3): Promise<T> {
+    let lastError: Error | null = null;
+    
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            return await operation();
+        } catch (error) {
+            lastError = error as Error;
+            console.warn(`Database operation failed (attempt ${i + 1}/${maxRetries}):`, error);
+            
+            // prepared statement 오류인 경우 잠시 대기 후 재시도
+            if (error instanceof Error && error.message.includes('prepared statement')) {
+                await new Promise(resolve => setTimeout(resolve, 100 * (i + 1))); // 점진적 대기
+                continue;
+            }
+            
+            // 다른 종류의 오류는 즉시 던지기
+            throw error;
+        }
+    }
+    
+    throw lastError;
+}
+
 export async function GET(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions)
@@ -37,19 +62,33 @@ export async function GET(request: NextRequest) {
         };
         const GROUP_THRESHOLD_MS = 60 * 1000;
 
-        const allDiets = await prisma.savedDiet.findMany({
-            where: { userId },
-            orderBy: { createdAt: 'desc' },
-            select: { createdAt: true }
-        });
+        // 병렬로 데이터 조회하여 성능 향상 (재시도 로직 포함)
+        const [allDiets, allWorkouts] = await Promise.all([
+            retryDatabaseOperation(() => 
+                prisma.savedDiet.findMany({
+                    where: { userId },
+                    orderBy: { createdAt: 'desc' },
+                    select: { createdAt: true }
+                })
+            ).catch(err => {
+                console.error('Error fetching diets:', err);
+                return []; // 실패 시 빈 배열 반환
+            }),
+            retryDatabaseOperation(() =>
+                prisma.savedWorkout.findMany({
+                    where: { userId },
+                    orderBy: { createdAt: 'desc' },
+                    select: { createdAt: true }
+                })
+            ).catch(err => {
+                console.error('Error fetching workouts:', err);
+                return []; // 실패 시 빈 배열 반환
+            })
+        ]);
+
         const dietGroups = groupRecordsByTime(allDiets, GROUP_THRESHOLD_MS);
         const totalDiets = dietGroups.length;
-
-        const allWorkouts = await prisma.savedWorkout.findMany({
-            where: { userId },
-            orderBy: { createdAt: 'desc' },
-            select: { createdAt: true }
-        });
+        
         const workoutGroups = groupRecordsByTime(allWorkouts, GROUP_THRESHOLD_MS);
         const totalWorkouts = workoutGroups.length;
         
@@ -75,14 +114,27 @@ export async function GET(request: NextRequest) {
         const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
         monthEnd.setHours(23, 59, 59, 999);
 
-        const thisWeekWorkouts = await prisma.savedWorkout.count({
-            where: { userId, date: { gte: weekStart, lte: weekEnd } }
-        });
-
-        const thisMonthCaloriesData = await prisma.savedWorkout.aggregate({
-            _sum: { estimatedCalories: true },
-            where: { userId, date: { gte: monthStart, lte: monthEnd } }
-        });
+        // 이번 주/월 데이터도 병렬로 조회 (재시도 로직 포함)
+        const [thisWeekWorkouts, thisMonthCaloriesData] = await Promise.all([
+            retryDatabaseOperation(() =>
+                prisma.savedWorkout.count({
+                    where: { userId, date: { gte: weekStart, lte: weekEnd } }
+                })
+            ).catch(err => {
+                console.error('Error fetching week workouts:', err);
+                return 0;
+            }),
+            retryDatabaseOperation(() =>
+                prisma.savedWorkout.aggregate({
+                    _sum: { estimatedCalories: true },
+                    where: { userId, date: { gte: monthStart, lte: monthEnd } }
+                })
+            ).catch(err => {
+                console.error('Error fetching month calories:', err);
+                return { _sum: { estimatedCalories: 0 } };
+            })
+        ]);
+        
         const thisMonthCalories = thisMonthCaloriesData._sum.estimatedCalories || 0;
 
         const overview = {

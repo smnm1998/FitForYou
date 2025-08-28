@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     TrashIcon,
     CalendarIcon,
@@ -53,6 +53,7 @@ export default function WorkoutPage() {
     const [selectedWorkout, setSelectedWorkout] =
         useState<SavedWorkoutItem | null>(null);
     const queryClient = useQueryClient();
+    const [hasAutoOpened, setHasAutoOpened] = useState(false);
 
     const {
         data: workoutsData,
@@ -95,6 +96,22 @@ export default function WorkoutPage() {
     );
 
     const savedWorkouts = workoutsData?.workouts || [];
+
+    // 데이터 로드 후 가장 최신 항목의 모달을 자동으로 열기
+    useEffect(() => {
+        if (!isLoading && savedWorkouts.length > 0 && !hasAutoOpened) {
+            const latestWorkout = savedWorkouts[0]; // 첫 번째 항목이 가장 최신 (createdAt desc 정렬)
+            const now = new Date();
+            const createdTime = new Date(latestWorkout.createdAt);
+            const timeDiff = now.getTime() - createdTime.getTime();
+            
+            // 5분 이내에 생성된 운동이면 자동으로 모달 열기
+            if (timeDiff < 5 * 60 * 1000) { // 5분 = 5 * 60 * 1000ms
+                setSelectedWorkout(latestWorkout);
+                setHasAutoOpened(true);
+            }
+        }
+    }, [isLoading, savedWorkouts, hasAutoOpened]);
 
     const handleDeleteWorkout = (
         workout: SavedWorkoutItem,
@@ -249,20 +266,30 @@ export default function WorkoutPage() {
                 </section>
             </div>
             {selectedWorkout && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-5">
-                    <div className="bg-white rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-300">
-                        <div className="flex-shrink-0 flex justify-between items-center p-6 border-b">
-                            <h2 className="text-xl font-bold text-gray-800 truncate">
-                                {selectedWorkout.title}
-                            </h2>
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4">
+                    <div className="bg-white rounded-3xl w-full max-w-7xl max-h-[96vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom-4 duration-500 ease-out border border-gray-200/50 overflow-hidden">
+                        <div className="flex-shrink-0 flex justify-between items-center p-6 sm:p-8 border-b border-gray-200/60 bg-gradient-to-r from-orange-50/80 to-amber-50/80 backdrop-blur-sm">
+                            <div className="flex items-center gap-4">
+                                <div className="w-14 h-14 bg-gradient-to-br from-orange-400 to-amber-500 rounded-2xl flex items-center justify-center shadow-lg">
+                                    <span className="text-2xl">🏋️</span>
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 truncate max-w-md">
+                                        {selectedWorkout.title}
+                                    </h2>
+                                    <p className="text-base text-gray-600 mt-1 font-medium">
+                                        {selectedWorkout.totalDays}일 맞춤 운동 계획
+                                    </p>
+                                </div>
+                            </div>
                             <button
                                 onClick={handleCloseModal}
-                                className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
+                                className="w-14 h-14 bg-white/90 hover:bg-white rounded-2xl flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 group"
                             >
-                                <XMarkIcon className="w-5 h-5 text-gray-600" />
+                                <XMarkIcon className="w-7 h-7 text-gray-600 group-hover:text-gray-800 transition-colors" />
                             </button>
                         </div>
-                        <div className="flex-1 overflow-y-auto p-6">
+                        <div className="flex-1 overflow-y-auto p-6 sm:p-8 bg-gray-50/30">
                             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {getUpcomingWorkoutPlan(
                                     selectedWorkout.weeklyWorkout
@@ -272,10 +299,10 @@ export default function WorkoutPage() {
                                     ).map((day) => (
                                         <div
                                             key={day.id}
-                                            className={`card p-5 border-2 transition-all ${
+                                            className={`rounded-2xl p-5 border-2 transition-all duration-300 hover:shadow-lg ${
                                                 day.isToday
-                                                    ? "border-orange-400 bg-orange-100 shadow-lg"
-                                                    : "border-gray-200 hover:border-gray-300"
+                                                    ? "border-orange-400 bg-gradient-to-br from-orange-50 to-amber-50 shadow-lg ring-2 ring-orange-200"
+                                                    : "border-gray-200 hover:border-orange-300 bg-white hover:shadow-md"
                                             }`}
                                         >
                                             <div className="flex justify-between items-center mb-4">
@@ -287,8 +314,8 @@ export default function WorkoutPage() {
                                                         {formatDate(day.date)}
                                                     </span>
                                                     {day.isToday && (
-                                                        <span className="px-2 py-1 bg-orange-500 text-white text-xs font-bold rounded-full">
-                                                            TODAY
+                                                        <span className="px-3 py-1 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-bold rounded-full shadow-md">
+                                                            오늘
                                                         </span>
                                                     )}
                                                 </div>
@@ -356,7 +383,7 @@ export default function WorkoutPage() {
                                                     (exercise, index) => (
                                                         <div
                                                             key={index}
-                                                            className="p-3 bg-gray-50 rounded-lg border-l-4 border-orange-400"
+                                                            className="p-4 bg-gray-50 rounded-xl border-l-4 border-orange-400 transition-all hover:shadow-sm"
                                                         >
                                                             <div className="flex justify-between items-start mb-1">
                                                                 <span className="font-medium text-gray-800 text-sm break-words">

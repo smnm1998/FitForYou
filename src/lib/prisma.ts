@@ -12,10 +12,12 @@ export const prisma =
     new PrismaClient({
         datasources: {
             db: {
-                // 수정된 부분: NODE_ENV 조건 분기를 제거하고 DATABASE_URL만 사용하도록 변경
                 url: process.env.DATABASE_URL,
             },
         },
+        log: process.env.NODE_ENV === 'development' ? ['error'] : ['error'],
+        // prepared statement 충돌을 방지하기 위한 설정
+        errorFormat: 'minimal',
     });
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;

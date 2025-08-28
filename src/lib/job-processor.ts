@@ -20,18 +20,51 @@ export interface JobStatusResponse {
 
 class AIJobProcessor implements JobProcessor {
     private processingJobs = new Set<string>();
+    
+    // 데이터베이스 작업을 재시도하는 헬퍼 메서드
+    private async retryDatabaseOperation<T>(operation: () => Promise<T>, maxRetries = 3): Promise<T> {
+        let lastError: Error | null = null;
+        
+        for (let i = 0; i < maxRetries; i++) {
+            try {
+                return await operation();
+            } catch (error) {
+                lastError = error as Error;
+                console.warn(`Database operation failed (attempt ${i + 1}/${maxRetries}):`, error);
+                
+                // 연결이 닫힌 경우나 네트워크 오류인 경우 재시도
+                if (error instanceof Error && 
+                    (error.message.includes('Server has closed the connection') ||
+                     error.message.includes('Connection terminated') ||
+                     error.message.includes('ECONNRESET') ||
+                     error.message.includes('prepared statement'))) {
+                    
+                    // 점진적 대기 시간 (200ms, 400ms, 600ms)
+                    await new Promise(resolve => setTimeout(resolve, 200 * (i + 1)));
+                    continue;
+                }
+                
+                // 다른 종류의 오류는 즉시 던지기
+                throw error;
+            }
+        }
+        
+        throw lastError;
+    }
 
     async createJob(userId: number, jobType: JobType, prompt: string, userProfile?: any): Promise<string> {
-        const job = await prisma.aiJob.create({
-            data: {
-                userId,
-                jobType,
-                prompt: prompt.trim(),
-                userProfile: userProfile || null,
-                status: 'PENDING',
-                priority: 1,
-            },
-        });
+        const job = await this.retryDatabaseOperation(() =>
+            prisma.aiJob.create({
+                data: {
+                    userId,
+                    jobType,
+                    prompt: prompt.trim(),
+                    userProfile: userProfile || null,
+                    status: 'PENDING',
+                    priority: 1,
+                },
+            })
+        );
 
         // 백그라운드에서 작업 시작 (응답을 기다리지 않음)
         this.processJobInBackground(job.id).catch(error => {
@@ -42,9 +75,11 @@ class AIJobProcessor implements JobProcessor {
     }
 
     async getJobStatus(jobId: string): Promise<JobStatusResponse> {
-        const job = await prisma.aiJob.findUnique({
-            where: { id: jobId },
-        });
+        const job = await this.retryDatabaseOperation(() =>
+            prisma.aiJob.findUnique({
+                where: { id: jobId },
+            })
+        );
 
         if (!job) {
             throw new Error('Job not found');
@@ -88,10 +123,12 @@ class AIJobProcessor implements JobProcessor {
     }
 
     async processJob(jobId: string): Promise<void> {
-        const job = await prisma.aiJob.findUnique({
-            where: { id: jobId },
-            include: { user: { include: { addInfo: true } } },
-        });
+        const job = await this.retryDatabaseOperation(() =>
+            prisma.aiJob.findUnique({
+                where: { id: jobId },
+                include: { user: { include: { addInfo: true } } },
+            })
+        );
 
         if (!job) {
             console.error(`Job ${jobId} not found`);
@@ -118,15 +155,17 @@ class AIJobProcessor implements JobProcessor {
 
         try {
             // 작업 상태를 PROCESSING으로 변경
-            await prisma.aiJob.update({
-                where: { id: jobId },
-                data: {
-                    status: 'PROCESSING',
-                    startedAt: new Date(),
-                    attempts: { increment: 1 },
-                    updatedAt: new Date(),
-                },
-            });
+            await this.retryDatabaseOperation(() =>
+                prisma.aiJob.update({
+                    where: { id: jobId },
+                    data: {
+                        status: 'PROCESSING',
+                        startedAt: new Date(),
+                        attempts: { increment: 1 },
+                        updatedAt: new Date(),
+                    },
+                })
+            );
 
             console.log(`🚀 Processing job ${jobId} (${job.jobType})`);
 
@@ -137,6 +176,9 @@ class AIJobProcessor implements JobProcessor {
                 weight: job.user.addInfo?.weight ?? undefined,
                 disease: job.user.addInfo?.disease ?? undefined,
             };
+
+            console.log(`👤 사용자 프로필:`, userProfile);
+            console.log(`📝 사용자 요청:`, job.prompt.substring(0, 100) + "...");
 
             let aiPrompt: string;
             let promptType: string;
@@ -155,9 +197,11 @@ class AIJobProcessor implements JobProcessor {
                     throw new Error(`Unsupported job type: ${job.jobType}`);
             }
 
+            console.log(`🤖 OpenAI API 호출 시작... (Model: gpt-4o-mini)`);
+
             // OpenAI API 호출 (최적화된 설정)
             const completion = await openai.chat.completions.create({
-                model: "gpt-3.5-turbo", // 더 빠른 모델 사용
+                model: "gpt-4o-mini", // gpt-4o-mini 사용
                 messages: [
                     {
                         role: "system",
@@ -182,9 +226,12 @@ class AIJobProcessor implements JobProcessor {
             }
 
             console.log(`✅ OpenAI response received for job ${jobId} (${aiResponse.length} chars)`);
+            console.log(`📄 응답 미리보기:`, aiResponse.substring(0, 300) + "...");
 
             // AI 응답 파싱
+            console.log(`🔄 AI 응답 파싱 시작...`);
             const parsedResult = parseAIResponse(aiResponse);
+            console.log(`✅ AI 응답 파싱 완료:`, Object.keys(parsedResult));
 
             // AI 채팅 기록 저장
             try {
@@ -202,31 +249,113 @@ class AIJobProcessor implements JobProcessor {
             }
 
             // 작업 완료 처리
-            await prisma.aiJob.update({
-                where: { id: jobId },
-                data: {
-                    status: 'COMPLETED',
-                    result: parsedResult,
-                    completedAt: new Date(),
-                    updatedAt: new Date(),
-                },
-            });
+            await this.retryDatabaseOperation(() =>
+                prisma.aiJob.update({
+                    where: { id: jobId },
+                    data: {
+                        status: 'COMPLETED',
+                        result: parsedResult,
+                        completedAt: new Date(),
+                        updatedAt: new Date(),
+                    },
+                })
+            );
 
             console.log(`✅ Job ${jobId} completed successfully`);
+            
+            // 결과를 데이터베이스에도 자동 저장
+            try {
+                await this.saveJobResult(jobId, parsedResult, job.jobType, job.userId);
+            } catch (saveError) {
+                console.error(`⚠️ Job ${jobId} completed but failed to save to database:`, saveError);
+                // 저장 실패해도 작업은 완료된 것으로 처리
+            }
 
         } catch (error: any) {
             console.error(`❌ Job ${jobId} failed:`, error);
 
             const errorMessage = this.getErrorMessage(error);
 
-            await prisma.aiJob.update({
-                where: { id: jobId },
-                data: {
-                    status: 'FAILED',
-                    error: errorMessage,
-                    updatedAt: new Date(),
-                },
+            await this.retryDatabaseOperation(() =>
+                prisma.aiJob.update({
+                    where: { id: jobId },
+                    data: {
+                        status: 'FAILED',
+                        error: errorMessage,
+                        updatedAt: new Date(),
+                    },
+                })
+            );
+        }
+    }
+
+    private async saveJobResult(jobId: string, result: any, jobType: JobType, userId: number): Promise<void> {
+        console.log(`💾 Saving job ${jobId} result to database...`);
+        
+        if (jobType === 'DIET_GENERATION' && result.weeklyDiet) {
+            const dietSavePromises = result.weeklyDiet.map(async (dayDiet: any, index: number) => {
+                const date = new Date();
+                date.setDate(date.getDate() + index); // 오늘부터 7일
+
+                // 첫 번째 식단(오늘)에 AI 제목 정보를 snack 필드에 메타데이터로 저장
+                let snackData = dayDiet.mealPlan?.snack || null;
+                if (index === 0 && result.title) {
+                    const metadata = {
+                        aiTitle: result.title,
+                        aiDescription: result.description,
+                        originalSnack: dayDiet.mealPlan?.snack,
+                    };
+                    snackData = JSON.stringify(metadata);
+                }
+
+                return prisma.savedDiet.create({
+                    data: {
+                        userId,
+                        date,
+                        breakfast: dayDiet.mealPlan?.breakfast || "",
+                        lunch: dayDiet.mealPlan?.lunch || "",
+                        dinner: dayDiet.mealPlan?.dinner || "",
+                        snack: snackData,
+                        totalCalories: dayDiet.mealPlan?.totalCalories || 0,
+                    },
+                });
             });
+
+            await Promise.all(dietSavePromises);
+            console.log(`✅ Saved diet plan for job ${jobId}`);
+            
+        } else if (jobType === 'WORKOUT_GENERATION' && result.weeklyWorkout) {
+            const workoutSavePromises = result.weeklyWorkout.map(async (dayWorkout: any, index: number) => {
+                const date = new Date();
+                date.setDate(date.getDate() + index); // 오늘부터 7일
+
+                // 첫 번째 운동(오늘)에 AI 제목 정보를 저장
+                let targetMusclesData = JSON.stringify(dayWorkout.workoutPlan?.targetMuscles || []);
+                if (index === 0 && result.title) {
+                    const metadata = {
+                        aiTitle: result.title,
+                        aiDescription: result.description,
+                        originalTargetMuscles: dayWorkout.workoutPlan?.targetMuscles || [],
+                    };
+                    targetMusclesData = JSON.stringify(metadata);
+                }
+
+                return prisma.savedWorkout.create({
+                    data: {
+                        userId,
+                        date,
+                        workoutType: dayWorkout.workoutPlan?.type || "",
+                        duration: dayWorkout.workoutPlan?.duration || "",
+                        intensity: dayWorkout.workoutPlan?.intensity || "medium",
+                        targetMuscles: targetMusclesData,
+                        exercises: JSON.stringify(dayWorkout.workoutPlan?.exercises || []),
+                        estimatedCalories: dayWorkout.workoutPlan?.estimatedCalories || 0,
+                    },
+                });
+            });
+
+            await Promise.all(workoutSavePromises);
+            console.log(`✅ Saved workout plan for job ${jobId}`);
         }
     }
 

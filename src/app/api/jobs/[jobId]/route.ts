@@ -4,6 +4,36 @@ import { authOptions } from "@/lib/auth";
 import { jobProcessor } from "@/lib/job-processor";
 import { prisma } from "@/lib/prisma";
 
+// 데이터베이스 작업을 재시도하는 헬퍼 함수
+async function retryDatabaseOperation<T>(operation: () => Promise<T>, maxRetries = 3): Promise<T> {
+    let lastError: Error | null = null;
+    
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            return await operation();
+        } catch (error) {
+            lastError = error as Error;
+            console.warn(`Database operation failed (attempt ${i + 1}/${maxRetries}):`, error);
+            
+            // 연결이 닫힌 경우나 네트워크 오류인 경우 재시도
+            if (error instanceof Error && 
+                (error.message.includes('Server has closed the connection') ||
+                 error.message.includes('Connection terminated') ||
+                 error.message.includes('ECONNRESET'))) {
+                
+                // 점진적 대기 시간 (100ms, 200ms, 300ms)
+                await new Promise(resolve => setTimeout(resolve, 100 * (i + 1)));
+                continue;
+            }
+            
+            // 다른 종류의 오류는 즉시 던지기
+            throw error;
+        }
+    }
+    
+    throw lastError;
+}
+
 // 작업 상태 조회
 export async function GET(
     request: NextRequest,
@@ -22,13 +52,15 @@ export async function GET(
         const { jobId } = await params;
         const userId = parseInt(session.user.id);
 
-        // 작업 소유권 확인
-        const job = await prisma.aiJob.findFirst({
-            where: {
-                id: jobId,
-                userId: userId,
-            },
-        });
+        // 작업 소유권 확인 (재시도 로직 포함)
+        const job = await retryDatabaseOperation(() =>
+            prisma.aiJob.findFirst({
+                where: {
+                    id: jobId,
+                    userId: userId,
+                },
+            })
+        );
 
         if (!job) {
             return NextResponse.json(
@@ -37,8 +69,10 @@ export async function GET(
             );
         }
 
-        // 작업 상태 조회
-        const jobStatus = await jobProcessor.getJobStatus(jobId);
+        // 작업 상태 조회 (재시도 로직 포함)
+        const jobStatus = await retryDatabaseOperation(() =>
+            jobProcessor.getJobStatus(jobId)
+        );
 
         return NextResponse.json({
             success: true,
@@ -72,18 +106,20 @@ export async function DELETE(
         const { jobId } = await params;
         const userId = parseInt(session.user.id);
 
-        // 작업 소유권 확인 및 취소
-        const result = await prisma.aiJob.updateMany({
-            where: {
-                id: jobId,
-                userId: userId,
-                status: { in: ['PENDING', 'PROCESSING'] }, // 완료된 작업은 취소 불가
-            },
-            data: {
-                status: 'CANCELLED',
-                updatedAt: new Date(),
-            },
-        });
+        // 작업 소유권 확인 및 취소 (재시도 로직 포함)
+        const result = await retryDatabaseOperation(() =>
+            prisma.aiJob.updateMany({
+                where: {
+                    id: jobId,
+                    userId: userId,
+                    status: { in: ['PENDING', 'PROCESSING'] }, // 완료된 작업은 취소 불가
+                },
+                data: {
+                    status: 'CANCELLED',
+                    updatedAt: new Date(),
+                },
+            })
+        );
 
         if (result.count === 0) {
             return NextResponse.json(

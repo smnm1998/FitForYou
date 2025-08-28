@@ -42,6 +42,7 @@ export default function DietPage() {
     );
     const modalContentRef = useRef<HTMLDivElement>(null);
     const queryClient = useQueryClient();
+    const [hasAutoOpened, setHasAutoOpened] = useState(false);
 
     const {
         data: dietsData,
@@ -78,6 +79,22 @@ export default function DietPage() {
     });
 
     const savedDiets = dietsData?.diets || [];
+
+    // 데이터 로드 후 가장 최신 항목의 모달을 자동으로 열기
+    useEffect(() => {
+        if (!isLoading && savedDiets.length > 0 && !hasAutoOpened) {
+            const latestDiet = savedDiets[0]; // 첫 번째 항목이 가장 최신 (createdAt desc 정렬)
+            const now = new Date();
+            const createdTime = new Date(latestDiet.createdAt);
+            const timeDiff = now.getTime() - createdTime.getTime();
+            
+            // 5분 이내에 생성된 식단이면 자동으로 모달 열기
+            if (timeDiff < 5 * 60 * 1000) { // 5분 = 5 * 60 * 1000ms
+                setSelectedDiet(latestDiet);
+                setHasAutoOpened(true);
+            }
+        }
+    }, [isLoading, savedDiets, hasAutoOpened]);
 
     const handleDeleteDiet = (diet: SavedDietItem, e: React.MouseEvent) => {
         e.stopPropagation();
@@ -235,22 +252,32 @@ export default function DietPage() {
                 </section>
             </div>
             {selectedDiet && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-5">
-                    <div className="bg-white rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-300">
-                        <div className="flex-shrink-0 flex justify-between items-center p-6 border-b">
-                            <h2 className="text-xl font-bold text-gray-800 truncate">
-                                {selectedDiet.title}
-                            </h2>
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4">
+                    <div className="bg-white rounded-3xl w-full max-w-7xl max-h-[96vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom-4 duration-500 ease-out border border-gray-200/50 overflow-hidden">
+                        <div className="flex-shrink-0 flex justify-between items-center p-6 sm:p-8 border-b border-gray-200/60 bg-gradient-to-r from-green-50/80 to-emerald-50/80 backdrop-blur-sm">
+                            <div className="flex items-center gap-4">
+                                <div className="w-14 h-14 bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg">
+                                    <span className="text-2xl">🍽️</span>
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 truncate max-w-md">
+                                        {selectedDiet.title}
+                                    </h2>
+                                    <p className="text-base text-gray-600 mt-1 font-medium">
+                                        {selectedDiet.totalDays}일 맞춤 식단 계획
+                                    </p>
+                                </div>
+                            </div>
                             <button
                                 onClick={handleCloseModal}
-                                className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
+                                className="w-14 h-14 bg-white/90 hover:bg-white rounded-2xl flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 group"
                             >
-                                <XMarkIcon className="w-5 h-5 text-gray-600" />
+                                <XMarkIcon className="w-7 h-7 text-gray-600 group-hover:text-gray-800 transition-colors" />
                             </button>
                         </div>
                         <div 
                             ref={modalContentRef}
-                            className="flex-1 overflow-y-auto p-6"
+                            className="flex-1 overflow-y-auto p-6 sm:p-8 bg-gray-50/30"
                         >
                             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {getUpcomingDietPlan(selectedDiet.weeklyDiet)
@@ -260,10 +287,10 @@ export default function DietPage() {
                                     ).map((day) => (
                                         <div
                                             key={day.id}
-                                            className={`card p-5 border-2 transition-all ${
+                                            className={`rounded-2xl p-5 border-2 transition-all duration-300 hover:shadow-lg ${
                                                 day.isToday
-                                                    ? "border-green-500 bg-green-100 shadow-lg"
-                                                    : "border-gray-200 hover:border-gray-300"
+                                                    ? "border-green-400 bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg ring-2 ring-green-200"
+                                                    : "border-gray-200 hover:border-green-300 bg-white hover:shadow-md"
                                             }`}
                                         >
                                             <div className="flex justify-between items-center mb-4">
@@ -275,8 +302,8 @@ export default function DietPage() {
                                                         {formatDate(day.date)}
                                                     </span>
                                                     {day.isToday && (
-                                                        <span className="px-2 py-1 bg-green-500 text-white text-xs font-bold rounded-full">
-                                                            TODAY
+                                                        <span className="px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold rounded-full shadow-md">
+                                                            오늘
                                                         </span>
                                                     )}
                                                 </div>
@@ -304,7 +331,7 @@ export default function DietPage() {
                                                     return (
                                                         <div
                                                             key={mealType}
-                                                            className={`p-3 rounded-lg border-l-4 ${
+                                                            className={`p-4 rounded-xl border-l-4 transition-all hover:shadow-sm ${
                                                                 colors[
                                                                     mealType as keyof typeof colors
                                                                 ]
@@ -330,10 +357,9 @@ export default function DietPage() {
                                                 })}
                                             </div>
                                             <div className="flex justify-center">
-                                                <span className="inline-flex items-center gap-1 px-3 py-2 bg-green-100 text-green-800 text-sm font-semibold rounded-full">
+                                                <span className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 text-sm font-bold rounded-full border border-green-200 shadow-sm">
                                                     <FireIcon className="w-4 h-4" />
-                                                    {day.mealPlan.totalCalories}{" "}
-                                                    kcal
+                                                    {day.mealPlan.totalCalories} kcal
                                                 </span>
                                             </div>
                                         </div>

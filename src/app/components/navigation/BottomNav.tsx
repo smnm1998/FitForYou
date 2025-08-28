@@ -68,12 +68,21 @@ export default function BottomNav() {
     const router = useRouter();
     const [previousPath, setPreviousPath] = useState('/collection');
 
+    // loading 페이지에서는 하단바를 숨김
+    if (pathname.startsWith('/loading')) {
+        return null;
+    }
+
     const handleNavClick = (path: string) => {
         if (path === '/add') {
             // Add 버튼 특별 처리
-            if (pathname === '/add') {
-                // 현재 Add 페이지에 있다면 이전 페이지로 이동
-                const targetPath = previousPath === '/add' ? '/collection' : previousPath;
+            if (isAddButtonActive) {
+                // 현재 Add 관련 페이지에 있다면 이전 페이지로 이동
+                const targetPath = previousPath === '/add' || 
+                                  previousPath.startsWith('/create') || 
+                                  previousPath.startsWith('/loading')
+                    ? '/collection' 
+                    : previousPath;
                 router.push(targetPath);
             } else {
                 setPreviousPath(pathname);
@@ -85,7 +94,14 @@ export default function BottomNav() {
         }
     };
 
-    const isAddButtonActive = pathname === '/add';
+    // 추가하기 관련 경로들을 모두 체크
+    const addRelatedPaths = ['/add', '/create', '/loading'];
+    const isAddButtonActive = addRelatedPaths.some(path => pathname.startsWith(path));
+    
+    // 개발 중 디버깅용 (나중에 제거)
+    if (typeof window !== 'undefined') {
+        console.log('🔍 BottomNav Debug:', { pathname, isAddButtonActive });
+    }
 
     return (
         <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-lg 
@@ -104,8 +120,8 @@ export default function BottomNav() {
                                           hover:scale-110 transition-all duration-300 ease-out"
                             >
                                 <div className={`w-20 h-20 rounded-full flex items-center justify-center 
-                                            border-4 shadow-xl transition-all duration-300 ease-out
-                                            ${isActive 
+                                            border-4 shadow-xl transition-all duration-300 ease-out relative
+                                            ${isAddButtonActive 
                                                 ? 'bg-primary border-primary-hover shadow-primary/50 scale-105' 
                                                 : 'bg-white border-primary shadow-primary/30 hover:shadow-primary/40'
                                             }`}>

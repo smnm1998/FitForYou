@@ -206,7 +206,12 @@ export async function POST(request: NextRequest) {
             },
         });
     } catch (error: any) {
-        console.error("🚨 AI 식단 생성 오류:", error);
+        console.error("🚨 AI 식단 생성 오류:", {
+            message: error.message,
+            stack: error.stack,
+            code: error.code,
+            name: error.name
+        });
 
         // OpenAI API 에러 구체적 처리
         if (error.code === "invalid_api_key") {

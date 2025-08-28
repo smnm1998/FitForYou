@@ -85,6 +85,7 @@ export default function CreatePage() {
         setPrompt("");
     }, [pageType]);
 
+
     const handleBackButton = () => {
         router.push("/add");
     };
@@ -122,6 +123,7 @@ export default function CreatePage() {
                     body: JSON.stringify({
                         jobType: pageType === "diet" ? "DIET_GENERATION" : "WORKOUT_GENERATION",
                         prompt: prompt.trim(),
+                        userProfile: null, // 서버에서 사용자 프로필을 조회하도록 함
                     }),
                 });
 
@@ -136,6 +138,8 @@ export default function CreatePage() {
                 const endpoint = pageType === "diet" 
                     ? "/api/ai/generate-diet"
                     : "/api/ai/generate-workout";
+                
+                console.log('🔄 폴백 API 호출:', endpoint);
                     
                 response = await fetch(endpoint, {
                     method: "POST",
@@ -147,19 +151,22 @@ export default function CreatePage() {
                         saveToDatabase: false,
                     }),
                 });
+                
+                console.log('📤 폴백 API 응답 상태:', response.status, response.statusText);
             }
 
             const data = await response.json();
+            console.log('📊 API 응답 데이터:', { success: data.success, hasData: !!data.data, error: data.error });
 
             if (!response.ok) {
-                throw new Error(data.error || `HTTP ${response.status}`);
+                console.error('❌ API 응답 실패:', response.status, data);
+                throw new Error(data.error || `HTTP ${response.status}: ${JSON.stringify(data)}`);
             }
 
             if (data.success) {
                 if (useAsyncJob && data.data.jobId) {
-                    // 비동기 작업 처리
+                    // 비동기 작업 처리 - 로딩 페이지로 리다이렉트
                     const jobId = data.data.jobId;
-                    setCurrentJobId(jobId);
                     
                     toast.success(
                         `🎉 ${
@@ -167,10 +174,10 @@ export default function CreatePage() {
                         } 생성이 시작되었습니다!`
                     );
                     
-                    console.log("✅ 비동기 작업 시작됨:", jobId);
+                    console.log("✅ 비동기 작업 시작됨, 로딩 페이지로 이동:", jobId);
                     
-                    // 폴링 시작
-                    startJobPolling(jobId);
+                    // 로딩 페이지로 리다이렉트
+                    router.push(`/loading?type=${pageType}&jobId=${jobId}`);
                 } else {
                     // 기존 동기 방식 처리
                     setIsGenerating(false);
@@ -187,15 +194,15 @@ export default function CreatePage() {
                     );
                     
                     console.log("✅ 동기 작업 완료:", data.data);
+                    
+                    // 결과 섹션으로 자동 스크롤
+                    setTimeout(() => {
+                        resultSectionRef.current?.scrollIntoView({
+                            behavior: "smooth",
+                            block: "start",
+                        });
+                    }, 100);
                 }
-                
-                // 결과 섹션으로 자동 스크롤
-                setTimeout(() => {
-                    resultSectionRef.current?.scrollIntoView({
-                        behavior: "smooth",
-                        block: "start",
-                    });
-                }, 100);
             } else {
                 throw new Error(data.error || "작업 생성에 실패했습니다.");
             }
@@ -223,91 +230,30 @@ export default function CreatePage() {
 
     const handleRegenerateWithSamePrompt = async () => {
         if (prompt.trim()) {
-            // 기존 작업 취소
-            if (currentJobId && jobStatus?.status && ['PENDING', 'PROCESSING'].includes(jobStatus.status)) {
-                await cancelCurrentJob();
-            }
             await handleGenerate();
         }
     };
 
-    const startJobPolling = (jobId: string) => {
-        const pollInterval = setInterval(async () => {
-            try {
-                const response = await fetch(`/api/jobs/${jobId}`);
-                const data = await response.json();
-
-                if (data.success) {
-                    const status = data.data;
-                    setJobStatus(status);
-
-                    if (status.status === 'COMPLETED') {
-                        clearInterval(pollInterval);
-                        setIsGenerating(false);
-                        
-                        // 결과 표시
-                        if (status.result) {
-                            setGeneratedContent({
-                                type: pageType,
-                                data: status.result,
-                                isLoading: false,
-                            });
-                            toast.success(
-                                `✅ ${
-                                    pageType === "diet" ? "식단" : "운동 계획"
-                                }이 완성되었습니다!`
-                            );
-                        }
-                    } else if (status.status === 'FAILED') {
-                        clearInterval(pollInterval);
-                        setIsGenerating(false);
-                        setError(status.error || "생성에 실패했습니다.");
-                        toast.error("생성에 실패했습니다.");
-                    } else if (status.status === 'CANCELLED') {
-                        clearInterval(pollInterval);
-                        setIsGenerating(false);
-                        toast("작업이 취소되었습니다.", { icon: '🚫' });
-                    }
-                }
-            } catch (error) {
-                console.error('폴링 오류:', error);
-            }
-        }, 2000); // 2초마다 체크
-
-        // 5분 후 타임아웃
-        setTimeout(() => {
-            clearInterval(pollInterval);
-            if (jobStatus?.status === 'PROCESSING') {
-                setError("처리 시간이 너무 오래 걸립니다. 다시 시도해주세요.");
-                setIsGenerating(false);
-            }
-        }, 300000); // 5분
-    };
-
-    const cancelCurrentJob = async () => {
-        if (!currentJobId) return;
-        
-        try {
-            await fetch(`/api/jobs/${currentJobId}`, {
-                method: 'DELETE',
-            });
-        } catch (error) {
-            console.error('작업 취소 오류:', error);
-        }
-    };
-
     const handleSaveAndNavigate = async () => {
-        if (!currentJobId || !generatedContent) return;
+        if (!generatedContent) return;
 
         setIsSaving(true);
 
         try {
-            // 작업 결과 저장
-            const response = await fetch(`/api/jobs/${currentJobId}/save`, {
+            // 기존 동기 방식으로 생성된 결과를 저장
+            const endpoint = pageType === "diet" 
+                ? "/api/ai/generate-diet"
+                : "/api/ai/generate-workout";
+                
+            const response = await fetch(endpoint, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
+                body: JSON.stringify({
+                    prompt: prompt.trim(),
+                    saveToDatabase: true, // 저장 요청
+                }),
             });
 
             const data = await response.json();
@@ -320,9 +266,7 @@ export default function CreatePage() {
                 );
 
                 // 해당 페이지로 이동
-                if (data.redirect) {
-                    router.push(data.redirect);
-                } else if (pageType === "diet") {
+                if (pageType === "diet") {
                     router.push("/diet");
                 } else {
                     router.push("/workout");
@@ -331,12 +275,13 @@ export default function CreatePage() {
                 throw new Error(data.error || "저장에 실패했습니다.");
             }
         } catch (err: any) {
-            console.error("❌ 저장 오료:", err);
+            console.error("❌ 저장 오류:", err);
             toast.error("저장 중 오류가 발생했습니다.");
         } finally {
             setIsSaving(false);
         }
     };
+
 
     const renderPreview = () => {
         if (!generatedContent?.data) return null;
@@ -684,6 +629,7 @@ export default function CreatePage() {
                     </div>
                 </section>
             </div>
+
         </div>
     );
 }
