@@ -97,18 +97,24 @@ export default function WorkoutPage() {
 
     const savedWorkouts = workoutsData?.workouts || [];
 
-    // 데이터 로드 후 가장 최신 항목의 모달을 자동으로 열기
+    // 로딩 페이지에서 리다이렉션된 경우에만 자동으로 모달 열기
     useEffect(() => {
-        if (!isLoading && savedWorkouts.length > 0 && !hasAutoOpened) {
-            const latestWorkout = savedWorkouts[0]; // 첫 번째 항목이 가장 최신 (createdAt desc 정렬)
+        const params = new URLSearchParams(window.location.search);
+        const shouldAutoOpen = params.get('auto-open') === 'true';
+        
+        if (!isLoading && savedWorkouts.length > 0 && !hasAutoOpened && shouldAutoOpen) {
+            const latestWorkout = savedWorkouts[0]; // 첫 번째 항목이 가장 최신
             const now = new Date();
             const createdTime = new Date(latestWorkout.createdAt);
             const timeDiff = now.getTime() - createdTime.getTime();
             
-            // 5분 이내에 생성된 운동이면 자동으로 모달 열기
-            if (timeDiff < 5 * 60 * 1000) { // 5분 = 5 * 60 * 1000ms
+            // 1분 이내에 생성된 운동이면 자동으로 모달 열기
+            if (timeDiff < 60 * 1000) { // 1분 = 60 * 1000ms
                 setSelectedWorkout(latestWorkout);
                 setHasAutoOpened(true);
+                
+                // URL에서 파라미터 제거
+                window.history.replaceState({}, '', window.location.pathname);
             }
         }
     }, [isLoading, savedWorkouts, hasAutoOpened]);

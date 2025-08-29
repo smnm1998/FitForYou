@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useForm, SubmitHandler, FieldErrors } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { toast } from "react-hot-toast";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -330,7 +331,7 @@ export default function SignUpForm() {
     };
 
     return (
-        <div className="w-full min-h-screen flex justify-center items-center relative">
+        <div className="w-full max-w-lg relative">
             {/* 뒤로가기 버튼 */}
             <Link
                 href="/"
@@ -446,8 +447,8 @@ export default function SignUpForm() {
                             <div className="space-y-4">
                                 <div className="flex justify-center gap-6">
                                     <label
-                                        className="flex flex-col items-center gap-3 p-5 border-2 border-gray-200 
-                                    rounded-xl cursor-pointer transition-colors duration-200 min-w-20
+                                        className="flex flex-col items-center gap-4 p-6 border-2 border-gray-200 
+                                    rounded-xl cursor-pointer transition-colors duration-200 min-w-24
                                     hover:border-primary has-[:checked]:border-primary 
                                     has-[:checked]:bg-primary/10"
                                     >
@@ -457,8 +458,14 @@ export default function SignUpForm() {
                                             {...register("gender")}
                                             className="sr-only"
                                         />
-                                        <div className="w-10 h-10 text-2xl">
-                                            👨
+                                        <div className="w-16 h-16 flex items-center justify-center">
+                                            <Image
+                                                src="/Man.svg"
+                                                alt="남성"
+                                                width={64}
+                                                height={64}
+                                                className="w-full h-full object-contain"
+                                            />
                                         </div>
                                         <span className="font-semibold text-gray-800">
                                             남성
@@ -466,8 +473,8 @@ export default function SignUpForm() {
                                     </label>
 
                                     <label
-                                        className="flex flex-col items-center gap-3 p-5 border-2 border-gray-200 
-                                    rounded-xl cursor-pointer transition-colors duration-200 min-w-20
+                                        className="flex flex-col items-center gap-4 p-6 border-2 border-gray-200 
+                                    rounded-xl cursor-pointer transition-colors duration-200 min-w-24
                                     hover:border-primary has-[:checked]:border-primary 
                                     has-[:checked]:bg-primary/10"
                                     >
@@ -477,8 +484,14 @@ export default function SignUpForm() {
                                             {...register("gender")}
                                             className="sr-only"
                                         />
-                                        <div className="w-10 h-10 text-2xl">
-                                            👩
+                                        <div className="w-16 h-16 flex items-center justify-center">
+                                            <Image
+                                                src="/Woman.svg"
+                                                alt="여성"
+                                                width={64}
+                                                height={64}
+                                                className="w-full h-full object-contain"
+                                            />
                                         </div>
                                         <span className="font-semibold text-gray-800">
                                             여성

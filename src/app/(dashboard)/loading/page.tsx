@@ -64,7 +64,7 @@ export default function LoadingPage() {
                             
                             setTimeout(() => {
                                 // 결과 페이지로 리다이렉트 (최신 데이터가 저장된 항목의 모달이 열림)
-                                const redirectTo = type === 'diet' ? '/diet' : '/workout';
+                                const redirectTo = type === 'diet' ? '/diet?auto-open=true' : '/workout?auto-open=true';
                                 router.push(redirectTo);
                             }, 1000);
                         } else if (status.status === 'FAILED') {

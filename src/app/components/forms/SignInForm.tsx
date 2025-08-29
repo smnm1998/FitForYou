@@ -66,13 +66,13 @@ export default function SignInForm() {
             </Link>
 
             {/* 로고 */}
-            <div className="mb-12">
+            <div className="mb-8">
                 <Image
                     src="/Logo.png"
                     alt="FitForYou 로고"
                     width={300}
                     height={120}
-                    className="w-60 h-auto sm:w-80"
+                    className="w-48 h-auto sm:w-56"
                 />
             </div>
 
