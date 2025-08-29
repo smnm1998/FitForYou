@@ -136,7 +136,6 @@ class AIJobProcessor implements JobProcessor {
         }
 
         if (job.status !== 'PENDING') {
-            console.log(`Job ${jobId} already processed (status: ${job.status})`);
             return;
         }
 
@@ -167,8 +166,6 @@ class AIJobProcessor implements JobProcessor {
                 })
             );
 
-            console.log(`🚀 Processing job ${jobId} (${job.jobType})`);
-
             // 사용자 프로필 구성
             const userProfile = {
                 gender: job.user.gender,
@@ -177,8 +174,6 @@ class AIJobProcessor implements JobProcessor {
                 disease: job.user.addInfo?.disease ?? undefined,
             };
 
-            console.log(`👤 사용자 프로필:`, userProfile);
-            console.log(`📝 사용자 요청:`, job.prompt.substring(0, 100) + "...");
 
             let aiPrompt: string;
             let promptType: string;
@@ -196,8 +191,6 @@ class AIJobProcessor implements JobProcessor {
                 default:
                     throw new Error(`Unsupported job type: ${job.jobType}`);
             }
-
-            console.log(`🤖 OpenAI API 호출 시작... (Model: gpt-4o-mini)`);
 
             // OpenAI API 호출 (최적화된 설정)
             const completion = await openai.chat.completions.create({
@@ -225,13 +218,9 @@ class AIJobProcessor implements JobProcessor {
                 throw new Error('Empty response from OpenAI');
             }
 
-            console.log(`✅ OpenAI response received for job ${jobId} (${aiResponse.length} chars)`);
-            console.log(`📄 응답 미리보기:`, aiResponse.substring(0, 300) + "...");
 
             // AI 응답 파싱
-            console.log(`🔄 AI 응답 파싱 시작...`);
             const parsedResult = parseAIResponse(aiResponse);
-            console.log(`✅ AI 응답 파싱 완료:`, Object.keys(parsedResult));
 
             // AI 채팅 기록 저장
             try {
@@ -261,18 +250,16 @@ class AIJobProcessor implements JobProcessor {
                 })
             );
 
-            console.log(`✅ Job ${jobId} completed successfully`);
-            
             // 결과를 데이터베이스에도 자동 저장
             try {
                 await this.saveJobResult(jobId, parsedResult, job.jobType, job.userId);
             } catch (saveError) {
-                console.error(`⚠️ Job ${jobId} completed but failed to save to database:`, saveError);
+                console.error(`Job ${jobId} completed but failed to save to database:`, saveError);
                 // 저장 실패해도 작업은 완료된 것으로 처리
             }
 
         } catch (error: any) {
-            console.error(`❌ Job ${jobId} failed:`, error);
+            console.error(`Job ${jobId} failed:`, error);
 
             const errorMessage = this.getErrorMessage(error);
 
@@ -289,8 +276,7 @@ class AIJobProcessor implements JobProcessor {
         }
     }
 
-    private async saveJobResult(jobId: string, result: any, jobType: JobType, userId: number): Promise<void> {
-        console.log(`💾 Saving job ${jobId} result to database...`);
+    private async saveJobResult(_jobId: string, result: any, jobType: JobType, userId: number): Promise<void> {
         
         if (jobType === 'DIET_GENERATION' && result.weeklyDiet) {
             const dietSavePromises = result.weeklyDiet.map(async (dayDiet: any, index: number) => {
@@ -322,7 +308,6 @@ class AIJobProcessor implements JobProcessor {
             });
 
             await Promise.all(dietSavePromises);
-            console.log(`✅ Saved diet plan for job ${jobId}`);
             
         } else if (jobType === 'WORKOUT_GENERATION' && result.weeklyWorkout) {
             const workoutSavePromises = result.weeklyWorkout.map(async (dayWorkout: any, index: number) => {
@@ -355,7 +340,6 @@ class AIJobProcessor implements JobProcessor {
             });
 
             await Promise.all(workoutSavePromises);
-            console.log(`✅ Saved workout plan for job ${jobId}`);
         }
     }
 
@@ -417,7 +401,6 @@ class AIJobProcessor implements JobProcessor {
             take: limit,
         });
 
-        console.log(`Found ${failedJobs.length} failed jobs to retry`);
 
         for (const job of failedJobs) {
             try {
@@ -445,14 +428,13 @@ class AIJobProcessor implements JobProcessor {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-        const result = await prisma.aiJob.deleteMany({
+        await prisma.aiJob.deleteMany({
             where: {
                 status: { in: ['COMPLETED', 'FAILED', 'CANCELLED'] },
                 completedAt: { lt: thirtyDaysAgo },
             },
         });
 
-        console.log(`Cleaned up ${result.count} old jobs`);
     }
 }
 

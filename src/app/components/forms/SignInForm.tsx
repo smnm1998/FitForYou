@@ -36,13 +36,16 @@ export default function SignInForm() {
                 userId: data.userId,
                 password: data.password,
                 callbackUrl: "/collection",
-                redirect: true,
+                redirect: false,
             });
 
             if (result?.error) {
                 toast.error(
                     "로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요."
                 );
+            } else if (result?.ok) {
+                toast.success("로그인 성공!");
+                window.location.href = "/collection";
             }
         } catch (error) {
             toast.error("로그인 중 오류가 발생했습니다.");

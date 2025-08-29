@@ -254,25 +254,25 @@ export default function DietPage() {
             {selectedDiet && (
                 <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4">
                     <div className="bg-white rounded-3xl w-full max-w-7xl max-h-[96vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom-4 duration-500 ease-out border border-gray-200/50 overflow-hidden">
-                        <div className="flex-shrink-0 flex justify-between items-center p-6 sm:p-8 border-b border-gray-200/60 bg-gradient-to-r from-green-50/80 to-emerald-50/80 backdrop-blur-sm">
-                            <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg">
-                                    <span className="text-2xl">🍽️</span>
+                        <div className="flex-shrink-0 flex justify-between items-center p-4 sm:p-6 border-b border-gray-200/60 bg-gradient-to-r from-green-50/80 to-emerald-50/80 backdrop-blur-sm">
+                            <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0">
+                                    <span className="text-lg sm:text-xl">🍽️</span>
                                 </div>
-                                <div>
-                                    <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 truncate max-w-md">
+                                <div className="min-w-0 flex-1">
+                                    <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 truncate">
                                         {selectedDiet.title}
                                     </h2>
-                                    <p className="text-base text-gray-600 mt-1 font-medium">
+                                    <p className="text-xs sm:text-sm text-gray-600 mt-1 font-medium truncate">
                                         {selectedDiet.totalDays}일 맞춤 식단 계획
                                     </p>
                                 </div>
                             </div>
                             <button
                                 onClick={handleCloseModal}
-                                className="w-14 h-14 bg-white/90 hover:bg-white rounded-2xl flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 group"
+                                className="w-8 h-8 sm:w-10 sm:h-10 bg-white/90 hover:bg-white rounded-lg sm:rounded-xl flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 group flex-shrink-0 ml-2"
                             >
-                                <XMarkIcon className="w-7 h-7 text-gray-600 group-hover:text-gray-800 transition-colors" />
+                                <XMarkIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600 group-hover:text-gray-800 transition-colors" />
                             </button>
                         </div>
                         <div 

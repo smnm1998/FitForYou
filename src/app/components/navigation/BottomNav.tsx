@@ -98,10 +98,6 @@ export default function BottomNav() {
     const addRelatedPaths = ['/add', '/create', '/loading'];
     const isAddButtonActive = addRelatedPaths.some(path => pathname.startsWith(path));
     
-    // 개발 중 디버깅용 (나중에 제거)
-    if (typeof window !== 'undefined') {
-        console.log('🔍 BottomNav Debug:', { pathname, isAddButtonActive });
-    }
 
     return (
         <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-lg 

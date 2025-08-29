@@ -14,10 +14,7 @@ export const authOptions: NextAuthOptions = {
             },
             async authorize(credentials) {
                 try {
-                    console.log("🔐 로그인 시도:", credentials?.userId);
-                    
                     if (!credentials?.userId || !credentials?.password) {
-                        console.log("❌ 인증 정보 누락");
                         return null;
                     }
 
@@ -27,7 +24,6 @@ export const authOptions: NextAuthOptions = {
                     });
 
                     if (!user) {
-                        console.log("❌ 사용자 없음:", credentials.userId);
                         return null;
                     }
 
@@ -37,11 +33,9 @@ export const authOptions: NextAuthOptions = {
                     );
 
                     if (!isPasswordValid) {
-                        console.log("❌ 비밀번호 불일치");
                         return null;
                     }
 
-                    console.log("✅ 로그인 성공:", user.nickname);
                     return {
                         id: user.id.toString(),
                         email: user.userId,
