@@ -313,12 +313,23 @@ export default function WorkoutPage() {
                         </div>
                         <div className="flex-1 overflow-y-auto p-6 sm:p-8 bg-gray-50/30">
                             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {getUpcomingWorkoutPlan(
-                                    selectedWorkout.weeklyWorkout
-                                ).length > 0 ? (
-                                    getUpcomingWorkoutPlan(
-                                        selectedWorkout.weeklyWorkout
-                                    ).map((day) => (
+                                {(() => {
+                                    const upcomingWorkouts = getUpcomingWorkoutPlan(selectedWorkout.weeklyWorkout);
+                                    
+                                    if (upcomingWorkouts.length === 0) {
+                                        return (
+                                            <div className="md:col-span-2 lg:col-span-3 text-center py-12">
+                                                <p className="text-lg font-semibold">
+                                                    표시할 운동 계획이 없습니다.
+                                                </p>
+                                                <p className="text-sm text-gray-500 mt-2">
+                                                    이 운동 계획은 이미 모두 지난 날짜의 계획입니다.
+                                                </p>
+                                            </div>
+                                        );
+                                    }
+                                    
+                                    return upcomingWorkouts.map((day) => (
                                         <div
                                             key={day.id}
                                             className={`rounded-2xl p-5 border-2 transition-all duration-300 hover:shadow-lg ${
@@ -349,125 +360,77 @@ export default function WorkoutPage() {
                                                 <div className="flex flex-wrap gap-2">
                                                     <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-md">
                                                         <ClockIcon className="w-3 h-3" />
-                                                        {
-                                                            day.workoutPlan
-                                                                .duration
-                                                        }
+                                                        {day.workoutPlan.duration}
                                                     </span>
                                                     <span
                                                         className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-md ${getIntensityColor(
-                                                            day.workoutPlan
-                                                                .intensity
+                                                            day.workoutPlan.intensity
                                                         )}`}
                                                     >
-                                                        {getIntensityText(
-                                                            day.workoutPlan
-                                                                .intensity
-                                                        )}
+                                                        {getIntensityText(day.workoutPlan.intensity)}
                                                     </span>
                                                     <span className="inline-flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded-md">
                                                         <FireIcon className="w-3 h-3" />
-                                                        {
-                                                            day.workoutPlan
-                                                                .estimatedCalories
-                                                        }{" "}
-                                                        kcal
+                                                        {day.workoutPlan.estimatedCalories} kcal
                                                     </span>
                                                 </div>
-                                                {day.workoutPlan.targetMuscles
-                                                    .length > 0 && (
+                                                {day.workoutPlan.targetMuscles.length > 0 && (
                                                     <div>
                                                         <p className="text-xs font-medium text-gray-600 mb-1">
                                                             타겟 근육:
                                                         </p>
                                                         <div className="flex flex-wrap gap-1">
-                                                            {day.workoutPlan.targetMuscles.map(
-                                                                (
-                                                                    muscle,
-                                                                    index
-                                                                ) => (
-                                                                    <span
-                                                                        key={
-                                                                            index
-                                                                        }
-                                                                        className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-md"
-                                                                    >
-                                                                        {muscle}
-                                                                    </span>
-                                                                )
-                                                            )}
+                                                            {day.workoutPlan.targetMuscles.map((muscle, index) => (
+                                                                <span
+                                                                    key={index}
+                                                                    className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-md"
+                                                                >
+                                                                    {muscle}
+                                                                </span>
+                                                            ))}
                                                         </div>
                                                     </div>
                                                 )}
                                             </div>
                                             <div className="space-y-2">
-                                                {day.workoutPlan.exercises.map(
-                                                    (exercise, index) => (
-                                                        <div
-                                                            key={index}
-                                                            className="p-4 bg-gray-50 rounded-xl border-l-4 border-orange-400 transition-all hover:shadow-sm"
-                                                        >
-                                                            <div className="flex justify-between items-start mb-1">
-                                                                <span className="font-medium text-gray-800 text-sm break-words">
-                                                                    {
-                                                                        exercise.name
-                                                                    }
+                                                {day.workoutPlan.exercises.map((exercise, index) => (
+                                                    <div
+                                                        key={index}
+                                                        className="p-4 bg-gray-50 rounded-xl border-l-4 border-orange-400 transition-all hover:shadow-sm"
+                                                    >
+                                                        <div className="flex justify-between items-start mb-1">
+                                                            <span className="font-medium text-gray-800 text-sm break-words">
+                                                                {exercise.name}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex flex-wrap gap-2 text-xs text-gray-600">
+                                                            {exercise.sets && exercise.reps && (
+                                                                <span className="bg-white px-2 py-1 rounded">
+                                                                    {exercise.sets}세트 × {exercise.reps}
                                                                 </span>
-                                                            </div>
-                                                            <div className="flex flex-wrap gap-2 text-xs text-gray-600">
-                                                                {exercise.sets &&
-                                                                    exercise.reps && (
-                                                                        <span className="bg-white px-2 py-1 rounded">
-                                                                            {
-                                                                                exercise.sets
-                                                                            }
-                                                                            세트
-                                                                            ×{" "}
-                                                                            {
-                                                                                exercise.reps
-                                                                            }
-                                                                        </span>
-                                                                    )}
-                                                                {exercise.duration && (
-                                                                    <span className="bg-white px-2 py-1 rounded">
-                                                                        {
-                                                                            exercise.duration
-                                                                        }
-                                                                    </span>
-                                                                )}
-                                                                {exercise.rest && (
-                                                                    <span className="bg-red-50 text-red-600 px-2 py-1 rounded">
-                                                                        휴식:{" "}
-                                                                        {
-                                                                            exercise.rest
-                                                                        }
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                            {exercise.description && (
-                                                                <p className="text-xs text-gray-600 mt-1 leading-relaxed break-words">
-                                                                    {
-                                                                        exercise.description
-                                                                    }
-                                                                </p>
+                                                            )}
+                                                            {exercise.duration && (
+                                                                <span className="bg-white px-2 py-1 rounded">
+                                                                    {exercise.duration}
+                                                                </span>
+                                                            )}
+                                                            {exercise.rest && (
+                                                                <span className="bg-red-50 text-red-600 px-2 py-1 rounded">
+                                                                    휴식: {exercise.rest}
+                                                                </span>
                                                             )}
                                                         </div>
-                                                    )
-                                                )}
+                                                        {exercise.description && (
+                                                            <p className="text-xs text-gray-600 mt-1 leading-relaxed break-words">
+                                                                {exercise.description}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
-                                    ))
-                                ) : (
-                                    <div className="md:col-span-2 lg:col-span-3 text-center py-12">
-                                        <p className="text-lg font-semibold">
-                                            표시할 운동 계획이 없습니다.
-                                        </p>
-                                        <p className="text-sm text-gray-500 mt-2">
-                                            이 운동 계획은 이미 모두 지난 날짜의
-                                            계획입니다.
-                                        </p>
-                                    </div>
-                                )}
+                                    ));
+                                })()}
                             </div>
                         </div>
                     </div>
