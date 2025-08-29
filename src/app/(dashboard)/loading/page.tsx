@@ -3,15 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import Image from "next/image";
-
-const logos = [
-    { id: 1, src: "/Logo.png", alt: "FitForYou" },
-    { id: 2, src: "/Logo.png", alt: "FitForYou" },
-    { id: 3, src: "/Logo.png", alt: "FitForYou" },
-    { id: 4, src: "/Logo.png", alt: "FitForYou" },
-    { id: 5, src: "/Logo.png", alt: "FitForYou" },
-];
 
 const loadingMessages = [
     "조금만 기다려주세요...",
@@ -20,25 +11,35 @@ const loadingMessages = [
     "최고의 결과를 위해 노력하고 있어요...",
 ];
 
+const icons = [
+    { emoji: "🏃‍♂️", name: "운동" },
+    { emoji: "🍎", name: "영양" },
+    { emoji: "💪", name: "근력" },
+    { emoji: "🧘‍♀️", name: "웰빙" },
+    { emoji: "⚡", name: "에너지" },
+];
+
 export default function LoadingPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const queryClient = useQueryClient();
     const type = searchParams.get("type") as "diet" | "workout" | null;
     const jobId = searchParams.get("jobId");
-    
+
     const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
-    const [currentLogoIndex, setCurrentLogoIndex] = useState(0);
+    const [currentIconIndex, setCurrentIconIndex] = useState(0);
 
     useEffect(() => {
         // 메시지 순환
         const messageInterval = setInterval(() => {
-            setCurrentMessageIndex((prev) => (prev + 1) % loadingMessages.length);
+            setCurrentMessageIndex(
+                (prev) => (prev + 1) % loadingMessages.length
+            );
         }, 3000);
 
-        // 로고 순차 애니메이션 (2-3초 간격)
-        const logoInterval = setInterval(() => {
-            setCurrentLogoIndex((prev) => (prev + 1) % logos.length);
+        // 아이콘 순환 (오른쪽 페이드 애니메이션)
+        const iconInterval = setInterval(() => {
+            setCurrentIconIndex((prev) => (prev + 1) % icons.length);
         }, 2500);
 
         // 작업 상태 폴링 (jobId가 있는 경우)
@@ -51,42 +52,58 @@ export default function LoadingPage() {
 
                     if (data.success) {
                         const status = data.data;
-                        
-                        if (status.status === 'COMPLETED') {
-                            console.log('✅ 작업 완료, 결과 페이지로 이동');
+
+                        if (status.status === "COMPLETED") {
+                            console.log("✅ 작업 완료, 결과 페이지로 이동");
                             if (pollingInterval) clearInterval(pollingInterval);
-                            
+
                             // React Query 캐시 무효화
-                            queryClient.invalidateQueries({ 
-                                queryKey: type === 'diet' ? ["saved-diets"] : ["saved-workouts"] 
+                            queryClient.invalidateQueries({
+                                queryKey:
+                                    type === "diet"
+                                        ? ["saved-diets"]
+                                        : ["saved-workouts"],
                             });
-                            queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
-                            
+                            queryClient.invalidateQueries({
+                                queryKey: ["dashboard-stats"],
+                            });
+
                             setTimeout(() => {
                                 // 결과 페이지로 리다이렉트 (최신 데이터가 저장된 항목의 모달이 열림)
-                                const redirectTo = type === 'diet' ? '/diet?auto-open=true' : '/workout?auto-open=true';
+                                const redirectTo =
+                                    type === "diet"
+                                        ? "/diet?auto-open=true"
+                                        : "/workout?auto-open=true";
                                 router.push(redirectTo);
                             }, 1000);
-                        } else if (status.status === 'FAILED') {
-                            console.error('❌ 작업 실패:', status.error);
+                        } else if (status.status === "FAILED") {
+                            console.error("❌ 작업 실패:", status.error);
                             if (pollingInterval) clearInterval(pollingInterval);
                             // 에러 페이지 또는 생성 페이지로 돌아가기
-                            router.push(`/create?type=${type}&error=generation_failed`);
+                            router.push(
+                                `/create?type=${type}&error=generation_failed`
+                            );
                         } else {
-                            console.log('🔄 작업 진행 중:', status.status, `${status.progress || 0}%`);
+                            console.log(
+                                "🔄 작업 진행 중:",
+                                status.status,
+                                `${status.progress || 0}%`
+                            );
                         }
                     } else {
-                        console.error('❌ 작업 상태 조회 실패:', data.error);
+                        console.error("❌ 작업 상태 조회 실패:", data.error);
                         if (pollingInterval) clearInterval(pollingInterval);
-                        router.push(`/create?type=${type}&error=status_check_failed`);
+                        router.push(
+                            `/create?type=${type}&error=status_check_failed`
+                        );
                     }
                 } catch (error) {
-                    console.error('폴링 오류:', error);
+                    console.error("폴링 오류:", error);
                 }
             }, 1000); // 1초마다 체크
         } else {
             // jobId가 없는 경우 create 페이지로 돌아가기
-            console.error('작업 ID가 없습니다. 생성 페이지로 돌아갑니다.');
+            console.error("작업 ID가 없습니다. 생성 페이지로 돌아갑니다.");
             setTimeout(() => {
                 router.push(`/create?type=${type}&error=missing_job_id`);
             }, 3000);
@@ -94,55 +111,41 @@ export default function LoadingPage() {
 
         return () => {
             clearInterval(messageInterval);
-            clearInterval(logoInterval);
+            clearInterval(iconInterval);
             if (pollingInterval) clearInterval(pollingInterval);
         };
-    }, [jobId, type, router]);
+    }, [jobId, type, router, queryClient]);
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 flex items-center justify-center p-4 pb-0">
-            <div className="text-center max-w-md w-full">
-                {/* 애니메이션 로고 - 하나씩 크게 표시 */}
-                <div className="relative mb-16 h-40 flex items-center justify-center">
-                    {logos.map((logo, index) => (
+        <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 flex items-center justify-center p-6">
+            <div className="text-center max-w-lg w-full">
+                {/* 아이콘 애니메이션 */}
+                <div className="mb-16 h-28 flex items-center justify-center relative">
+                    {icons.map((icon, index) => (
                         <div
-                            key={logo.id}
+                            key={index}
                             className={`absolute transition-all duration-1000 ease-in-out ${
-                                index === currentLogoIndex
-                                    ? 'opacity-100 scale-100'
-                                    : 'opacity-0 scale-75'
+                                index === currentIconIndex
+                                    ? "opacity-100 translate-x-0 scale-100"
+                                    : index < currentIconIndex
+                                    ? "opacity-0 -translate-x-8 scale-95"
+                                    : "opacity-0 translate-x-8 scale-95"
                             }`}
                         >
-                            <div className="w-32 h-32 rounded-full bg-white shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300">
-                                <Image
-                                    src={logo.src}
-                                    alt={logo.alt}
-                                    width={80}
-                                    height={80}
-                                    className="w-20 h-20 object-contain"
-                                />
+                            <div className="w-40 h-40 mx-auto rounded-full bg-white shadow-xl flex items-center justify-center">
+                                <span className="text-7xl">{icon.emoji}</span>
                             </div>
                         </div>
                     ))}
                 </div>
 
                 {/* 메시지 */}
-                <div className="mb-8">
-                    <h1 className="text-2xl font-bold text-gray-800 mb-4">
-                        {type === 'diet' ? '🍽️ 맞춤 식단' : '🏋️ 운동 계획'} 생성 중
-                    </h1>
-                    <p className="text-gray-600 text-lg animate-pulse">
+                <div>
+                    <p className="text-gray-700 text-base font-medium animate-pulse">
                         {loadingMessages[currentMessageIndex]}
                     </p>
                 </div>
-
-                {/* 추가 정보 */}
-                <div className="text-sm text-gray-500 space-y-2">
-                    <p>AI가 당신의 정보를 바탕으로</p>
-                    <p>최적의 {type === 'diet' ? '식단' : '운동 계획'}을 만들고 있어요</p>
-                </div>
             </div>
-
         </div>
     );
 }

@@ -95,12 +95,20 @@ export default function DietPage() {
             if (timeDiff < 60 * 1000) { // 1분 = 60 * 1000ms
                 setSelectedDiet(latestDiet);
                 setHasAutoOpened(true);
+                document.body.style.overflow = 'hidden';
                 
                 // URL에서 파라미터 제거
                 window.history.replaceState({}, '', window.location.pathname);
             }
         }
     }, [isLoading, savedDiets, hasAutoOpened]);
+
+    // 컴포넌트 언마운트 시 body 스크롤 복원
+    useEffect(() => {
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, []);
 
     const handleDeleteDiet = (diet: SavedDietItem, e: React.MouseEvent) => {
         e.stopPropagation();
@@ -109,8 +117,17 @@ export default function DietPage() {
         }
     };
 
-    const handleDietClick = (diet: SavedDietItem) => setSelectedDiet(diet);
-    const handleCloseModal = () => setSelectedDiet(null);
+    const handleDietClick = (diet: SavedDietItem) => {
+        setSelectedDiet(diet);
+        // 모달 열릴 때 body 스크롤 방지
+        document.body.style.overflow = 'hidden';
+    };
+    
+    const handleCloseModal = () => {
+        setSelectedDiet(null);
+        // 모달 닫힐 때 body 스크롤 복원
+        document.body.style.overflow = 'unset';
+    };
 
     useEffect(() => {
         if (selectedDiet && modalContentRef.current) {
@@ -259,7 +276,7 @@ export default function DietPage() {
             </div>
             {selectedDiet && (
                 <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4">
-                    <div className="bg-white rounded-3xl w-full max-w-7xl max-h-[96vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom-4 duration-500 ease-out border border-gray-200/50 overflow-hidden">
+                    <div className="bg-white rounded-3xl w-full max-w-6xl h-[85vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom-4 duration-500 ease-out border border-gray-200/50 overflow-hidden">
                         <div className="flex-shrink-0 flex justify-between items-center p-4 sm:p-6 border-b border-gray-200/60 bg-gradient-to-r from-green-50/80 to-emerald-50/80 backdrop-blur-sm">
                             <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
                                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0">
