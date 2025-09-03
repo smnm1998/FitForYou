@@ -26,7 +26,7 @@ export function useAsyncJob(options: UseAsyncJobOptions = {}) {
         onError,
         onStatusChange,
         pollingInterval = 2000,
-        maxPollingTime = 300000, // 5분
+        maxPollingTime = 30000, // 30초 (Vercel 무료 버전 제한 고려)
     } = options;
 
     const [currentJobId, setCurrentJobId] = useState<string | null>(null);

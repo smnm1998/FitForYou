@@ -206,7 +206,7 @@ class AIJobProcessor implements JobProcessor {
                     },
                 ],
                 temperature: 0.5, // 더 일관된 응답
-                max_tokens: 2000, // 토큰 수 최적화
+                max_tokens: 1500, // Vercel 무료 버전 고려하여 토큰 수 감소
                 top_p: 0.9,
                 frequency_penalty: 0,
                 presence_penalty: 0,
