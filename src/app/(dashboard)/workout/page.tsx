@@ -176,8 +176,20 @@ export default function WorkoutPage() {
     const getUpcomingWorkoutPlan = (weeklyWorkout: WeeklyWorkout[]) => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        return weeklyWorkout
+        
+        // 중복된 날짜 제거를 위한 Map 사용
+        const uniqueWorkouts = new Map<string, WeeklyWorkout>();
+        
+        weeklyWorkout
             .filter((day) => new Date(day.date) >= today)
+            .forEach((day) => {
+                const dateKey = day.date;
+                if (!uniqueWorkouts.has(dateKey)) {
+                    uniqueWorkouts.set(dateKey, day);
+                }
+            });
+        
+        return Array.from(uniqueWorkouts.values())
             .sort((a, b) => {
                 if (a.isToday) return -1;
                 if (b.isToday) return 1;
