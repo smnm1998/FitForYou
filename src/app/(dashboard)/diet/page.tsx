@@ -338,10 +338,23 @@ export default function DietPage() {
                                                     "dinner",
                                                     "snack",
                                                 ].map((mealType) => {
-                                                    const mealContent =
+                                                    let mealContent =
                                                         day.mealPlan[
                                                             mealType as keyof MealPlan
                                                         ];
+                                                    
+                                                    // 간식 필드가 JSON 메타데이터인지 확인하고 파싱
+                                                    if (mealType === "snack" && typeof mealContent === "string") {
+                                                        try {
+                                                            const parsed = JSON.parse(mealContent);
+                                                            if (parsed.originalSnack !== undefined) {
+                                                                mealContent = parsed.originalSnack;
+                                                            }
+                                                        } catch {
+                                                            // JSON 파싱 실패 시 원본 유지
+                                                        }
+                                                    }
+                                                    
                                                     if (!mealContent)
                                                         return null;
                                                     const colors = {
@@ -373,7 +386,7 @@ export default function DietPage() {
                                                                 </span>
                                                             </div>
                                                             <p className="text-xs text-gray-700 leading-relaxed break-words">
-                                                                {mealContent.toString()}
+                                                                {String(mealContent)}
                                                             </p>
                                                         </div>
                                                     );
