@@ -22,6 +22,24 @@ interface DashboardStats {
     };
 }
 
+interface SavedDietItem {
+    id: string;
+    title: string;
+    description: string;
+    createdAt: string;
+    avgCalories: number;
+    totalDays: number;
+}
+
+interface SavedWorkoutItem {
+    id: string;
+    title: string;
+    description: string;
+    createdAt: string;
+    avgCalories: number;
+    totalDays: number;
+}
+
 export default function CollectionContent() {
     const [currentDate] = useState(
         new Date().toLocaleDateString("ko-KR", {
@@ -43,6 +61,36 @@ export default function CollectionContent() {
             return response.data as DashboardStats;
         },
         staleTime: 5 * 60 * 1000, // 5분간 캐시
+        retry: 2,
+    });
+
+    // 최근 저장된 식단 데이터 조회 (최대 1개)
+    const {
+        data: recentDiets,
+        isLoading: isDietsLoading,
+    } = useQuery({
+        queryKey: ["recent-diets"],
+        queryFn: async () => {
+            const response = await fetch("/api/diets?limit=1");
+            const result = await response.json();
+            return result.success ? result.data.diets : [];
+        },
+        staleTime: 5 * 60 * 1000,
+        retry: 2,
+    });
+
+    // 최근 저장된 운동 데이터 조회 (최대 1개)
+    const {
+        data: recentWorkouts,
+        isLoading: isWorkoutsLoading,
+    } = useQuery({
+        queryKey: ["recent-workouts"],
+        queryFn: async () => {
+            const response = await fetch("/api/workouts?limit=1");
+            const result = await response.json();
+            return result.success ? result.data.workouts : [];
+        },
+        staleTime: 5 * 60 * 1000,
         retry: 2,
     });
 
@@ -177,57 +225,115 @@ export default function CollectionContent() {
                         오늘의 추천
                     </h2>
                     <div className="space-y-4">
-                        <Link
-                            href="/diet"
-                            className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm 
-                                            hover:shadow-lg transition-all duration-200 hover:transform 
-                                            hover:-translate-y-1 block"
-                        >
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                                    <HomeIcon className="w-6 h-6 text-green-600" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="text-xs font-semibold text-green-700 bg-green-100 px-2 py-1 rounded-md">
-                                            추천 식단
-                                        </span>
-                                    </div>
-                                    <h3 className="font-bold text-gray-800 mb-1 leading-tight truncate">
-                                        근력 증가를 위한 고단백 식단
-                                    </h3>
-                                    <p className="text-sm text-gray-600 leading-relaxed truncate">
-                                        오늘 섭취하기 좋은 식단입니다
-                                    </p>
-                                </div>
-                            </div>
-                        </Link>
-
-                        <Link
-                            href="/workout"
-                            className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm 
-                                                hover:shadow-lg transition-all duration-200 hover:transform 
+                        {/* 식단 추천 */}
+                        {!isDietsLoading && recentDiets && recentDiets.length > 0 ? (
+                            <Link
+                                href="/diet"
+                                className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm
+                                                hover:shadow-lg transition-all duration-200 hover:transform
                                                 hover:-translate-y-1 block"
-                        >
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                                    <BoltIcon className="w-6 h-6 text-orange-600" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="text-xs font-semibold text-orange-700 bg-orange-100 px-2 py-1 rounded-md">
-                                            추천 운동
-                                        </span>
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                        <HomeIcon className="w-6 h-6 text-green-600" />
                                     </div>
-                                    <h3 className="font-bold text-gray-800 mb-1 leading-tight truncate">
-                                        전신 근력 운동 루틴
-                                    </h3>
-                                    <p className="text-sm text-gray-600 leading-relaxed truncate">
-                                        예상 소모 칼로리: 320 kcal
-                                    </p>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="text-xs font-semibold text-green-700 bg-green-100 px-2 py-1 rounded-md">
+                                                최근 식단
+                                            </span>
+                                        </div>
+                                        <h3 className="font-bold text-gray-800 mb-1 leading-tight truncate">
+                                            {recentDiets[0].title}
+                                        </h3>
+                                        <p className="text-sm text-gray-600 leading-relaxed truncate">
+                                            평균 {recentDiets[0].avgCalories}kcal • {recentDiets[0].totalDays}일 계획
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
-                        </Link>
+                            </Link>
+                        ) : (
+                            <Link
+                                href="/add"
+                                className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-5 border-2 border-dashed border-green-300
+                                                hover:border-green-400 transition-all duration-200 hover:transform
+                                                hover:-translate-y-1 block"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                        <HomeIcon className="w-6 h-6 text-green-600" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="text-xs font-semibold text-green-700 bg-green-200 px-2 py-1 rounded-md">
+                                                식단 생성
+                                            </span>
+                                        </div>
+                                        <h3 className="font-bold text-gray-800 mb-1 leading-tight">
+                                            첫 번째 맞춤 식단을 만들어보세요
+                                        </h3>
+                                        <p className="text-sm text-gray-600 leading-relaxed">
+                                            AI가 당신에게 맞는 식단을 추천해드려요
+                                        </p>
+                                    </div>
+                                </div>
+                            </Link>
+                        )}
+
+                        {/* 운동 추천 */}
+                        {!isWorkoutsLoading && recentWorkouts && recentWorkouts.length > 0 ? (
+                            <Link
+                                href="/workout"
+                                className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm
+                                                    hover:shadow-lg transition-all duration-200 hover:transform
+                                                    hover:-translate-y-1 block"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                        <BoltIcon className="w-6 h-6 text-orange-600" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="text-xs font-semibold text-orange-700 bg-orange-100 px-2 py-1 rounded-md">
+                                                최근 운동
+                                            </span>
+                                        </div>
+                                        <h3 className="font-bold text-gray-800 mb-1 leading-tight truncate">
+                                            {recentWorkouts[0].title}
+                                        </h3>
+                                        <p className="text-sm text-gray-600 leading-relaxed truncate">
+                                            평균 {recentWorkouts[0].avgCalories}kcal • {recentWorkouts[0].totalDays}일 계획
+                                        </p>
+                                    </div>
+                                </div>
+                            </Link>
+                        ) : (
+                            <Link
+                                href="/add"
+                                className="bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl p-5 border-2 border-dashed border-orange-300
+                                                    hover:border-orange-400 transition-all duration-200 hover:transform
+                                                    hover:-translate-y-1 block"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                        <BoltIcon className="w-6 h-6 text-orange-600" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="text-xs font-semibold text-orange-700 bg-orange-200 px-2 py-1 rounded-md">
+                                                운동 생성
+                                            </span>
+                                        </div>
+                                        <h3 className="font-bold text-gray-800 mb-1 leading-tight">
+                                            첫 번째 맞춤 운동을 만들어보세요
+                                        </h3>
+                                        <p className="text-sm text-gray-600 leading-relaxed">
+                                            AI가 당신에게 맞는 운동을 추천해드려요
+                                        </p>
+                                    </div>
+                                </div>
+                            </Link>
+                        )}
                     </div>
                 </section>
 
