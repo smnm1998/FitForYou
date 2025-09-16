@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import {
     TrashIcon,
-    CalendarIcon,
     ClockIcon,
     XMarkIcon,
     FireIcon,
@@ -16,6 +15,12 @@ import { apiClient } from "@/lib/api-client";
 interface SavedWorkoutItem {
     id: string;
     title: string;
+    description: string;
+    advice?: {
+        tips: string[];
+        warnings: string[];
+        summary: string;
+    };
     createdAt: string;
     weeklyWorkout: WeeklyWorkout[];
     isCompleteWeek: boolean;
@@ -238,23 +243,24 @@ export default function WorkoutPage() {
                                     onClick={() => handleWorkoutClick(workout)}
                                 >
                                     <div className="flex justify-between items-start mb-4">
-                                        <div className="flex-1 min-w-0">
-                                            <h3 className="text-lg font-bold text-gray-800 mb-2 truncate">
-                                                {workout.title}
-                                            </h3>
-                                            <div className="flex gap-4 text-sm text-gray-600">
-                                                <span className="flex items-center gap-1">
-                                                    <CalendarIcon className="w-4 h-4 text-orange-500" />
-                                                    {formatDate(
-                                                        workout.createdAt
-                                                    )}
-                                                </span>
-                                                <span className="flex items-center gap-1">
-                                                    <ClockIcon className="w-4 h-4 text-orange-500" />
-                                                    {getTimeSince(
-                                                        workout.createdAt
-                                                    )}
-                                                </span>
+                                        <div className="flex items-start gap-3 flex-1 min-w-0">
+                                            <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+                                                <span className="text-xl">💪</span>
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className="text-lg font-bold text-gray-800 mb-2 truncate">
+                                                    {workout.title}
+                                                </h3>
+                                                <div className="flex flex-wrap gap-2 text-sm text-gray-500">
+                                                    <span className="flex items-center gap-1">
+                                                        <ClockIcon className="w-3 h-3 text-orange-500" />
+                                                        {getTimeSince(workout.createdAt)}
+                                                    </span>
+                                                    <span className="text-gray-400">•</span>
+                                                    <span>
+                                                        {formatDate(workout.createdAt)}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                         <button
@@ -300,7 +306,10 @@ export default function WorkoutPage() {
                 </section>
             </div>
             {selectedWorkout && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4">
+                <div
+                    key={selectedWorkout.id}
+                    className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4"
+                >
                     <div className="bg-white rounded-3xl w-full max-w-6xl h-[85vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom-4 duration-500 ease-out border border-gray-200/50 overflow-hidden">
                         <div className="flex-shrink-0 flex justify-between items-center p-4 sm:p-6 border-b border-gray-200/60 bg-gradient-to-r from-orange-50/80 to-amber-50/80 backdrop-blur-sm">
                             <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
@@ -324,13 +333,76 @@ export default function WorkoutPage() {
                             </button>
                         </div>
                         <div className="flex-1 overflow-y-auto p-6 sm:p-8 bg-gray-50/30">
-                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* 조언 섹션 - 조언이 있고 유효한 데이터를 가진 경우에만 표시 */}
+                                {selectedWorkout.advice && selectedWorkout.advice.summary && (
+                                    <div className="md:col-span-2 rounded-3xl p-6 bg-white shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+                                        <div className="flex items-center gap-3 mb-5">
+                                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
+                                                <span className="text-white text-lg">💪</span>
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-gray-900 text-lg">AI 운동 조언</h3>
+                                                <p className="text-xs text-gray-500">개인 맞춤 트레이닝 가이드</p>
+                                            </div>
+                                        </div>
+
+                                        {/* 전체 요약 */}
+                                        <div className="mb-6 p-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl border-l-4 border-orange-500">
+                                            <div className="flex items-start gap-2 mb-2">
+                                                <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                                    <span className="text-white text-xs">📋</span>
+                                                </div>
+                                                <h4 className="font-semibold text-orange-900 text-sm">핵심 요약</h4>
+                                            </div>
+                                            <p className="text-sm text-orange-800 leading-relaxed ml-8">{selectedWorkout.advice.summary}</p>
+                                        </div>
+
+                                        <div className="grid md:grid-cols-2 gap-4">
+                                            {/* 팁들 */}
+                                            <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl p-4">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center">
+                                                        <span className="text-white text-xs">✨</span>
+                                                    </div>
+                                                    <h4 className="font-semibold text-emerald-900 text-sm">운동 팁</h4>
+                                                </div>
+                                                <div className="space-y-2.5">
+                                                    {selectedWorkout.advice.tips.map((tip, index) => (
+                                                        <div key={index} className="flex items-start gap-2.5">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2 flex-shrink-0"></div>
+                                                            <p className="text-sm text-emerald-800 leading-relaxed">{tip}</p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* 주의사항 */}
+                                            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <div className="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center">
+                                                        <span className="text-white text-xs">⚠️</span>
+                                                    </div>
+                                                    <h4 className="font-semibold text-amber-900 text-sm">주의사항</h4>
+                                                </div>
+                                                <div className="space-y-2.5">
+                                                    {selectedWorkout.advice.warnings.map((warning, index) => (
+                                                        <div key={index} className="flex items-start gap-2.5">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-2 flex-shrink-0"></div>
+                                                            <p className="text-sm text-amber-800 leading-relaxed">{warning}</p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                                 {(() => {
                                     const upcomingWorkouts = getUpcomingWorkoutPlan(selectedWorkout.weeklyWorkout);
                                     
                                     if (upcomingWorkouts.length === 0) {
                                         return (
-                                            <div className="md:col-span-2 lg:col-span-3 text-center py-12">
+                                            <div className="md:col-span-2 text-center py-12">
                                                 <p className="text-lg font-semibold">
                                                     표시할 운동 계획이 없습니다.
                                                 </p>

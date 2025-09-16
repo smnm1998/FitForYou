@@ -100,26 +100,47 @@ function processGroupData(group: any[]) {
     const firstItem = group[0];
     const lastItem = group[group.length - 1];
 
-    // 첫 번째 아이템의 targetMuscles에서 AI 메타데이터 추출 시도
-    let aiTitle = "맞춤형 운동";
+    // 그룹 내에서 AI 메타데이터가 있는 항목 찾기
+    let aiTitle = null;
     let aiDescription = "개인 맞춤 운동 계획";
-    let originalTargetMuscles: string[] = [];
+    let aiAdvice = null;
+    let metadataItem = null;
 
-    if (firstItem.targetMuscles) {
-        try {
-            const parsed = JSON.parse(firstItem.targetMuscles);
-            if (parsed.aiTitle) {
-                aiTitle = parsed.aiTitle;
-                aiDescription = parsed.aiDescription || aiDescription;
-                originalTargetMuscles = parsed.originalTargetMuscles || [];
-                firstItem.targetMuscles = JSON.stringify(originalTargetMuscles); // 원래 타겟근육으로 복원
-            } else {
-                originalTargetMuscles = parsed;
+    // 모든 항목을 순회하여 AI 메타데이터 찾기
+    for (const item of group) {
+        if (item.targetMuscles) {
+            console.log("🔍 [DEBUG] targetMuscles 필드 내용 (ID: " + item.id + "):", item.targetMuscles);
+            try {
+                const parsed = JSON.parse(item.targetMuscles);
+                if (parsed.aiTitle) {
+                    console.log("✅ [DEBUG] AI 제목 발견:", parsed.aiTitle);
+                    aiTitle = parsed.aiTitle;
+                    aiDescription = parsed.aiDescription || aiDescription;
+                    aiAdvice = parsed.aiAdvice || null;
+                    metadataItem = item;
+                    item.targetMuscles = JSON.stringify(parsed.originalTargetMuscles || []); // 원래 타겟근육으로 복원
+                    break; // AI 메타데이터를 찾았으므로 중단
+                }
+            } catch (error) {
+                // JSON 파싱 실패는 일반적인 타겟근육 배열이므로 무시하고 계속
+                console.log("🔍 [DEBUG] 일반 타겟근육 데이터 (ID: " + item.id + "):", item.targetMuscles);
             }
-        } catch {
-            // JSON 파싱 실패시 빈 배열
-            originalTargetMuscles = [];
         }
+    }
+
+    // AI 제목이 없는 경우 폴백 제목 생성 (기존 운동용)
+    if (!aiTitle) {
+        const createdDate = new Date(firstItem.createdAt);
+        const dateString = createdDate.toLocaleDateString("ko-KR", {
+            month: "short",
+            day: "numeric"
+        });
+        const timeString = createdDate.toLocaleTimeString("ko-KR", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false
+        });
+        aiTitle = `맞춤형 운동 - ${dateString} ${timeString}`;
     }
 
     // 주간 운동 데이터 구성
@@ -174,6 +195,7 @@ function processGroupData(group: any[]) {
         id: `workout_group_${firstItem.createdAt.getTime()}`,
         title: aiTitle,
         description: aiDescription,
+        advice: aiAdvice,
         createdAt: firstItem.createdAt.toISOString(),
         weeklyWorkout,
         isCompleteWeek,

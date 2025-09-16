@@ -162,9 +162,16 @@ export async function POST(request: NextRequest) {
                             const metadata = {
                                 aiTitle: parsedDiet.title,
                                 aiDescription: parsedDiet.description,
+                                aiAdvice: parsedDiet.advice,
                                 originalSnack: dayDiet.mealPlan?.snack,
                             };
                             snackData = JSON.stringify(metadata);
+                            console.log("💾 [DEBUG] AI 제목 저장:", {
+                                aiTitle: parsedDiet.title,
+                                aiDescription: parsedDiet.description,
+                                aiAdvice: parsedDiet.advice,
+                                snackData: snackData
+                            });
                         }
 
                         return prisma.savedDiet.create({

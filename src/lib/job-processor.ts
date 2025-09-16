@@ -289,6 +289,7 @@ class AIJobProcessor implements JobProcessor {
                     const metadata = {
                         aiTitle: result.title,
                         aiDescription: result.description,
+                        aiAdvice: result.advice,
                         originalSnack: dayDiet.mealPlan?.snack,
                     };
                     snackData = JSON.stringify(metadata);
@@ -320,6 +321,7 @@ class AIJobProcessor implements JobProcessor {
                     const metadata = {
                         aiTitle: result.title,
                         aiDescription: result.description,
+                        aiAdvice: result.advice,
                         originalTargetMuscles: dayWorkout.workoutPlan?.targetMuscles || [],
                     };
                     targetMusclesData = JSON.stringify(metadata);

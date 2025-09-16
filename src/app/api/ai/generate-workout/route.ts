@@ -164,6 +164,7 @@ export async function POST(request: NextRequest) {
                             const metadata = {
                                 aiTitle: parsedWorkout.title,
                                 aiDescription: parsedWorkout.description,
+                                aiAdvice: parsedWorkout.advice,
                                 originalTargetMuscles:
                                     dayWorkout.workoutPlan?.targetMuscles || [],
                             };

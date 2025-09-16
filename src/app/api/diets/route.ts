@@ -73,6 +73,16 @@ export async function GET(request: NextRequest) {
         const totalGroups = groupedDiets.length;
         const paginatedDiets = groupedDiets.slice(skip, skip + limit);
 
+        console.log("📤 [DEBUG] API 응답 데이터 개수:", paginatedDiets.length);
+        if (paginatedDiets.length > 0) {
+            console.log("📤 [DEBUG] 첫 번째 식단 구조:", {
+                id: paginatedDiets[0].id,
+                title: paginatedDiets[0].title,
+                hasAdvice: !!paginatedDiets[0].advice,
+                advice: paginatedDiets[0].advice
+            });
+        }
+
         return NextResponse.json({
             success: true,
             data: {
@@ -99,22 +109,52 @@ function processGroupData(group: any[]) {
     const firstItem = group[0];
     const lastItem = group[group.length - 1];
 
-    // 첫 번째 아이템의 snack에서 AI 메타데이터 추출 시도
-    let aiTitle = "맞춤형 식단";
+    // 그룹 내에서 AI 메타데이터가 있는 항목 찾기
+    let aiTitle = null;
     let aiDescription = "개인 맞춤 식단 계획";
+    let aiAdvice = null;
+    let metadataItem = null;
 
-    if (firstItem.snack) {
-        try {
-            const parsed = JSON.parse(firstItem.snack);
-            if (parsed.aiTitle) {
-                aiTitle = parsed.aiTitle;
-                aiDescription = parsed.aiDescription || aiDescription;
-                firstItem.snack = parsed.originalSnack; // 원래 간식 정보로 복원
+    // 모든 항목을 순회하여 AI 메타데이터 찾기
+    for (const item of group) {
+        if (item.snack) {
+            console.log("🔍 [DEBUG] snack 필드 내용 (ID: " + item.id + "):", item.snack);
+            try {
+                const parsed = JSON.parse(item.snack);
+                if (parsed.aiTitle) {
+                    console.log("✅ [DEBUG] AI 제목 발견:", parsed.aiTitle);
+                    console.log("✅ [DEBUG] AI 조언 발견:", parsed.aiAdvice);
+                    aiTitle = parsed.aiTitle;
+                    aiDescription = parsed.aiDescription || aiDescription;
+                    aiAdvice = parsed.aiAdvice || null;
+                    metadataItem = item;
+                    item.snack = parsed.originalSnack; // 원래 간식 정보로 복원
+                    break; // AI 메타데이터를 찾았으므로 중단
+                }
+            } catch (error) {
+                // JSON 파싱 실패는 일반적인 간식 텍스트이므로 무시하고 계속
+                console.log("🔍 [DEBUG] 일반 간식 텍스트 (ID: " + item.id + "):", item.snack);
             }
-        } catch {
-            // JSON 파싱 실패시 그냥 원본 사용
         }
     }
+
+    // AI 제목이 없는 경우 폴백 제목 생성 (기존 식단용)
+    if (!aiTitle) {
+        const createdDate = new Date(firstItem.createdAt);
+        const dateString = createdDate.toLocaleDateString("ko-KR", {
+            month: "short",
+            day: "numeric"
+        });
+        const timeString = createdDate.toLocaleTimeString("ko-KR", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false
+        });
+        aiTitle = `맞춤형 식단 - ${dateString} ${timeString}`;
+        console.log("🔄 [DEBUG] 폴백 제목 생성:", aiTitle);
+    }
+
+    console.log("📋 [DEBUG] 최종 AI 제목:", aiTitle);
 
     // 주간 식단 데이터 구성
     const weeklyDiet = group.map((diet) => {
@@ -149,6 +189,7 @@ function processGroupData(group: any[]) {
         id: `diet_group_${firstItem.createdAt.getTime()}`,
         title: aiTitle,
         description: aiDescription,
+        advice: aiAdvice,
         createdAt: firstItem.createdAt.toISOString(),
         weeklyDiet,
         isCompleteWeek,
