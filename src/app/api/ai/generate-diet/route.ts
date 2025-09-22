@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
 
         // OpenAI API 호출
         const completion = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
+            model: "gpt-4.1-mini",
             messages: [
                 {
                     role: "system",
@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
                                 aiTitle: parsedDiet.title,
                                 aiDescription: parsedDiet.description,
                                 aiAdvice: parsedDiet.advice,
-                                snackData: snackData
+                                snackData: snackData,
                             });
                         }
 
@@ -217,7 +217,7 @@ export async function POST(request: NextRequest) {
             message: error.message,
             stack: error.stack,
             code: error.code,
-            name: error.name
+            name: error.name,
         });
 
         // OpenAI API 에러 구체적 처리
