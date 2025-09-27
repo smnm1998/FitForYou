@@ -1,0 +1,52 @@
+.container {
+    @apply h-screen bg-gradient-to-br from-green-50 via-yellow-50 to-green-100
+            bg-[url('/background.png')] bg-cover bg-center bg-no-repeat
+            flex flex-col justify-center items-center p-4 py-6 overflow-hidden relative;
+}
+
+.contentWrapper {
+    @apply flex flex-col items-center max-w-lg w-full px-4;
+}
+
+.logoSection {
+    @apply mb-8;
+}
+
+.logoImage {
+    @apply w-52 h-auto sm:w-64 md:w-80;
+}
+
+.introText {
+    @apply text-center w-full mb-12;
+}
+
+.tagline {
+    @apply text-sm font-semibold text-gray-800 mb-3 break-keep sm:text-base md:text-lg;
+}
+
+.buttonSection {
+    @apply absolute bottom-8 left-4 right-4 max-w-lg mx-auto;
+}
+
+.buttonContainer {
+    @apply w-full space-y-4;
+}
+
+.startButton {
+    @apply w-full block py-4 px-6 bg-primary text-center text-gray-800
+            font-semibold rounded-xl transition-all duration-200 hover:bg-primary-hover
+            hover:transform hover:-translate-y-0.5 shadow-md hover:shadow-lg text-base sm:text-lg;
+}
+
+.signupContainer {
+    @apply text-center;
+}
+
+.signupText {
+    @apply text-sm text-gray-600 sm:text-base;
+}
+
+.signupLink {
+    @apply text-gray-800 font-bold underline hover:underline
+            transition-all duration-200;
+}
