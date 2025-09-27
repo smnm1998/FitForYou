@@ -1,22 +1,11 @@
 import { useEffect } from "react";
-import { useForm, SubmitHandler, FieldErrors } from "react-hook-form";
+import { useForm, SubmitHandler, FieldErrors, Resolver } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useSignUpStore } from "@/lib/useSignUpStore";
 import { apiClient } from "@/lib/api-client";
-
-export interface SignUpFormData {
-    userId: string;
-    password?: string;
-    confirmPassword?: string;
-    gender?: "male" | "female";
-    height?: number;
-    weight?: number;
-    nickname?: string;
-    disease?: string;
-}
+import { useSignUpStore } from "../useSignUpStore";
 
 const fullSchema = yup.object().shape({
     userId: yup.string().required("아이디를 입력해주세요."),
@@ -73,6 +62,8 @@ const fullSchema = yup.object().shape({
     disease: yup.string().optional(),
 });
 
+export type SignUpFormData = yup.InferType<typeof fullSchema>;
+
 export function useSignUpFormHandler() {
     const router = useRouter();
     const {
@@ -84,29 +75,28 @@ export function useSignUpFormHandler() {
         setNicknameChecked,
         setIsSubmitting,
     } = useSignUpStore();
+
     const formMethods = useForm<SignUpFormData>({
-        resolver: yupResolver(fullSchema),
+        resolver: yupResolver(fullSchema) as Resolver<SignUpFormData>,
         mode: "onChange",
         context: { currentStep },
     });
+
     const {
-        register,
-        handleSubmit,
-        formState: { errors, touchedFields },
-        getValues,
+        formState: { touchedFields },
         watch,
-        setError,
-        clearErrors,
         trigger,
+        getValues,
+        clearErrors,
+        setError,
+        handleSubmit,
     } = formMethods;
 
-    // 아이디 필드 값 변경 시 '중복 확인' 상태 초기화
     const watchedUserId = watch("userId");
     useEffect(() => {
         if (touchedFields.userId) setUserIdChecked(false);
     }, [watchedUserId, touchedFields.userId, setUserIdChecked]);
 
-    // 닉네임 필드 값이 변경되면 '중복 확인' 상태를 초기화
     const watchedNickname = watch("nickname");
     useEffect(() => {
         if (touchedFields.nickname) setNicknameChecked(false);
@@ -177,7 +167,7 @@ export function useSignUpFormHandler() {
                 isValid = await trigger(["height", "weight"]);
                 break;
         }
-        if (isValid) nextStep(); // zustand 액션 호출
+        if (isValid) nextStep();
     };
 
     const onSubmit: SubmitHandler<SignUpFormData> = async (data) => {
@@ -216,7 +206,6 @@ export function useSignUpFormHandler() {
         console.error("폼 유효성 검사 실패: ", errorFields);
     };
 
-    // 컴포넌트에서 사용할 모든 것을 반환합니다.
     return {
         formMethods,
         handlers: {
