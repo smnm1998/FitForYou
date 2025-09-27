@@ -1,0 +1,68 @@
+.formContainer {
+    @apply flex flex-col items-center max-w-md w-full px-4;
+}
+
+.backButton {
+    @apply fixed top-8 left-4 w-12 h-12 bg-white/90 backdrop-blur-md rounded-full
+            flex items-center justify-center shadow-light hover:bg-primary/90 transition-all
+            duration-200 z-20;
+}
+
+.logoContainer {
+    @apply mb-8;
+}
+
+.logoImage {
+    @apply w-48 h-auto sm:w-56;
+}
+
+.form {
+    @apply w-full space-y-5;
+}
+
+.inputGroup {
+    @apply space-y-4;
+}
+
+.inputField {
+    @apply w-full p-4 border-2 rounded-xl focus:outline-none transition-colors duration-200 font-medium;
+}
+
+.inputError {
+    @apply border-error;
+}
+
+.inputDefault {
+    @apply border-gray-200 focus:border-primary;
+}
+
+.errorMessage {
+    @apply text-error text-sm font-medium mt-1;
+}
+
+.submitButton {
+    @apply w-full py-4 bg-primary text-gray-800 font-semibold rounded-xl
+            hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed
+            transition-all duration-200 hover:transform hover:-translate-y-0.5
+            shadow-md hover:shadow-lg text-base sm:text-lg;
+}
+
+.loadingSpinnerContainer {
+    @apply flex items-center justify-center;
+}
+
+.loadingSpinner {
+    @apply inline-block w-4 h-4 border-2 border-gray-300 border-t-primary rounded-full animate-spin mr-2;
+}
+
+.linkContainer {
+    @apply text-center mt-5;
+}
+
+.linkText {
+    @apply text-sm text-gray-600;
+}
+
+.link {
+    @apply text-gray-800 font-bold underline hover:no-underline transition-all duration-200;
+}

@@ -8,6 +8,8 @@ import { toast } from "react-hot-toast";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import styles from "./SignInForm.module.css";
+import clsx from "clsx";
 
 interface SignInFormData {
     userId: string;
@@ -49,55 +51,41 @@ export default function SignInForm() {
             }
         } catch (error) {
             toast.error("로그인 중 오류가 발생했습니다.");
-            console.error("Sign in error:", error);
+            console.error("로그인 에러:", error);
         }
     };
 
     return (
-        <div className="flex flex-col items-center max-w-md w-full px-4">
-            {/* 뒤로가기 버튼 */}
-            <Link
-                href="/"
-                className="fixed top-8 left-4 w-12 h-12 bg-white/90 backdrop-blur-md 
-                    rounded-full flex items-center justify-center shadow-light 
-                    hover:bg-primary/90 transition-all duration-200 z-20"
-            >
+        <div className={styles.formContainer}>
+            <Link href="/" className={styles.backButton}>
                 <ArrowLeftIcon className="w-5 h-5 text-gray-700" />
             </Link>
 
-            {/* 로고 */}
-            <div className="mb-8">
+            <div className={styles.logoContainer}>
                 <Image
                     src="/Logo.png"
-                    alt="FitForYou 로고"
+                    alt="FitForYou_Logo"
                     width={300}
                     height={120}
-                    className="w-48 h-auto sm:w-56"
+                    className={styles.logoImage}
                 />
             </div>
 
-            {/* 로그인 폼 */}
-            <form
-                onSubmit={handleSubmit(onSubmit)}
-                className="w-full space-y-5"
-            >
-                <div className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
+                <div className={styles.inputGroup}>
                     <div>
                         <input
                             type="text"
                             {...register("userId")}
                             placeholder="아이디"
-                            className={`w-full p-4 border-2 rounded-xl 
-                            focus:outline-none transition-colors duration-200 text-base font-medium
-                            ${
-                                errors.userId
-                                    ? "border-error"
-                                    : "border-gray-200 focus:border-primary"
-                            }`}
+                            className={clsx(styles.inputField, {
+                                [styles.inputError]: errors.userId,
+                                [styles.inputDefault]: !errors.userId,
+                            })}
                             disabled={isSubmitting}
                         />
                         {errors.userId && (
-                            <p className="text-error text-sm font-medium mt-1">
+                            <p className={styles.errorMessage}>
                                 {errors.userId.message}
                             </p>
                         )}
@@ -107,35 +95,29 @@ export default function SignInForm() {
                             type="password"
                             {...register("password")}
                             placeholder="비밀번호"
-                            className={`w-full p-4 border-2 rounded-xl 
-                            focus:outline-none transition-colors duration-200 text-base font-medium
-                            ${
-                                errors.password
-                                    ? "border-error"
-                                    : "border-gray-200 focus:border-primary"
-                            }`}
+                            className={clsx(styles.inputField, {
+                                [styles.inputError]: errors.password,
+                                [styles.inputDefault]: !errors.password,
+                            })}
                             disabled={isSubmitting}
                         />
                         {errors.password && (
-                            <p className="text-error text-sm font-medium mt-1">
+                            <p className={styles.errorMessage}>
                                 {errors.password.message}
                             </p>
                         )}
                     </div>
                 </div>
-
                 <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full py-4 bg-primary text-gray-800 font-semibold rounded-xl
-                        hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed
-                        transition-all duration-200 hover:transform hover:-translate-y-0.5
-                        shadow-md hover:shadow-lg text-base sm:text-lg"
+                    className={styles.submitButton}
                 >
                     {isSubmitting ? (
-                        <span className="flex items-center justify-center">
-                            <div className="loading-spinner mr-2"></div>
-                            로그인 중...
+                        <span className={styles.loadingSpinnerContainer}>
+                            <div className={styles.loadingSpinner}>
+                                로그인 중 ...
+                            </div>
                         </span>
                     ) : (
                         "로그인"
@@ -143,15 +125,10 @@ export default function SignInForm() {
                 </button>
             </form>
 
-            {/* 회원가입 링크 */}
-            <div className="text-center mt-5">
-                <p className="text-sm text-gray-600">
+            <div className={styles.linkContainer}>
+                <p className={styles.linkText}>
                     회원이 아니신가요?{" "}
-                    <Link
-                        href="/signup"
-                        className="text-gray-800 font-bold underline hover:no-underline 
-                        transition-all duration-200"
-                    >
+                    <Link href="/signup" className={styles.link}>
                         회원가입
                     </Link>
                 </p>
