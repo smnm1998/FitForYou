@@ -1,0 +1,145 @@
+.container {
+    @apply w-full max-w-lg relative;
+}
+
+.backButton {
+    @apply fixed top-8 left-4 w-12 h-12 bg-white/90 backdrop-blur-md
+            rounded-full flex items-center justify-center shadow-light
+            hover:bg-primary/90 transition-all duration-200 z-20;
+}
+
+.formWrapper {
+    @apply max-w-lg w-full px-4;
+}
+
+.card {
+    @apply w-full mb-6;
+}
+
+.title {
+    @apply text-xl font-bold text-center mb-6 text-gray-800 break-keep sm:text-2xl;
+}
+
+.inputGroup {
+    @apply space-y-4;
+}
+
+.inputGroup {
+    @apply space-y-4;
+}
+
+.inputContainer {
+    @apply relative;
+}
+
+.inputField {
+    @apply w-full p-4 border-2 rounded-xl text-base font-medium transition-colors duration-200
+            focus:outline-none;
+}
+
+.inputWithButton {
+    @apply pr-24;
+}
+
+.inputError {
+    @apply border-error;
+}
+
+.inputDefault {
+    @apply border-gray-200 focus:border-primary;
+}
+
+.checkButton {
+    @apply absolute right-2 top-2 px-3 py-2 bg-primary text-gray-800
+            font-semibold rounded-lg text-sm hover:bg-primary-hover
+            transition-colors duration-200;
+}
+
+.errorMessage {
+    @apply text-error text-sm font-medium;
+}
+
+.successMessage {
+    @apply text-success text-sm font-medium;
+}
+
+.genderSelection {
+    @apply flex justify-center gap-6;
+}
+
+.genderLabel {
+    @apply flex flex-col items-center gap-4 p-6 border-2 border-gray-200 rounded-xl
+            cursor-pointer transition-colors duration-200 min-w-24 hover:border-primary has-[:checked]:border-primary
+            has-[:checked]:bg-primary/10;
+}
+
+.genderImageContainer {
+    @apply w-16 h-16 flex items-center justify-center;
+}
+
+.genderImage {
+    @apply w-full h-full object-contain;
+}
+
+.genderText {
+    @apply font-semibold text-gray-800;
+}
+
+.physicalInfoGroup {
+    @apply grid grid-cols-2 gap-4;
+}
+
+.label {
+    @apply block text-sm font-semibold text-gray-800 mb-2;
+}
+
+.bottomNav {
+    @apply fixed bottom-20 left-1/2 transform -translate-x-1/2 w-full max-w-lg px-5 z-[15];
+}
+
+.bottomNavCard {
+    @apply bg-white/90 backdrop-blur-md rounded-2xl border-primary/30 p-4;
+}
+
+.buttonGroup {
+    @apply flex gap-3;
+}
+
+.prevButton {
+    @apply flex-1 py-3 bg-gray-100 text-gray-600 font-semibold rounded-xl
+            hover:bg-gray-200 transition-colors duration-200;
+}
+
+.nextButton {
+    @apply flex-1 py-3 bg-primary text-gray-800 font-semibold rounded-xl
+            hover:bg-primary-hover transition-all duration-200 hover:transform hover:-translate-y-0.5;
+}
+
+.submitButton {
+    @apply flex-1 py-3 bg-success text-white font-semibold rounded-xl hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed
+            transition-all duration-200 hover:transform hover:-translate-y-0.5;
+}
+
+.loadingSpinnerContainer {
+    @apply flex items-center justify-center;
+}
+
+.loadingSpinner {
+    @apply inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2;
+}
+
+.progressBarContainer {
+    @apply fixed bottom-5 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2 z-10;
+}
+
+.progressBarTrack {
+    @apply w-60 h-1 bg-gray-200/50 rounded-full backdrop-blur-md overflow-hidden;
+}
+
+.progressBarFill {
+    @apply h-full bg-primary/80 rounded-full transition-all duration-300;
+}
+
+.progressText {
+    @apply text-sm font-medium text-gray-800 bg-white/80 backdrop-blur-md px-3 py-1 rounded-full;
+}
