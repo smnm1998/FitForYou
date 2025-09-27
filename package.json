@@ -7,6 +7,7 @@
         "build": "prisma generate && next build",
         "start": "next start",
         "lint": "next lint",
+        "test": "jest --watch",
         "db:push": "prisma db push",
         "db:migrate": "prisma migrate dev",
         "db:generate": "prisma generate",
@@ -40,7 +41,10 @@
         "zod": "^3.22.4"
     },
     "devDependencies": {
+        "@testing-library/jest-dom": "^6.8.0",
+        "@testing-library/react": "^16.3.0",
         "@types/bcryptjs": "^2.4.6",
+        "@types/jest": "^30.0.0",
         "@types/node": "^20",
         "@types/react": "^19",
         "@types/react-dom": "^19",
@@ -49,6 +53,8 @@
         "@typescript-eslint/parser": "^8.41.0",
         "eslint": "^9.34.0",
         "eslint-config-next": "^15.5.0",
+        "jest": "^30.1.3",
+        "jest-environment-jsdom": "^30.1.2",
         "prisma": "^6.14.0",
         "tsx": "^4.6.2",
         "typescript": "^5"
