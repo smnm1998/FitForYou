@@ -1,5 +1,3 @@
-// src/lib/prisma.ts
-
 import { PrismaClient } from "@prisma/client";
 
 const globalForPrisma = globalThis as unknown as {
@@ -15,9 +13,9 @@ export const prisma =
                 url: process.env.DATABASE_URL,
             },
         },
-        log: process.env.NODE_ENV === 'development' ? ['error'] : ['error'],
+        log: process.env.NODE_ENV === "development" ? ["error"] : ["error"],
         // prepared statement 충돌을 방지하기 위한 설정
-        errorFormat: 'minimal',
+        errorFormat: "minimal",
     });
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;

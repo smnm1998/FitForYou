@@ -15,6 +15,8 @@ import {
     CakeIcon as CakeSolid,
     BoltIcon as BoltSolid,
 } from "@heroicons/react/24/solid";
+import styles from "./BottomNav.module.css";
+import clsx from "clsx";
 
 interface NavItem {
     id: string;
@@ -102,99 +104,69 @@ export default function BottomNav() {
     );
 
     return (
-        <nav className="fixed bottom-0 left-1/2 transform -translate-x-1/2 z-30 w-full max-w-2xl bg-white/95 backdrop-blur-lg
-                        border-t border-gray-200/50 shadow-lg">
-            <div className="flex items-center justify-around px-4 py-2">
-                    {navItems.map((item) => {
-                        const isActive = pathname === item.path;
+        <nav className={styles.navContainer}>
+            <div className={styles.navWrapper}>
+                {navItems.map((item) => {
+                    const isActive = pathname === item.path;
 
-                        if (item.isSpecial) {
-                            // 가운데 추가하기 버튼 (크기 증가 + 애니메이션)
-                            return (
-                                <button
-                                    key={item.id}
-                                    onClick={() => handleNavClick(item.path)}
-                                    className="flex justify-center items-center relative -mt-8 
-                                          hover:scale-110 transition-all duration-300 ease-out"
-                                >
-                                    <div
-                                        className={`w-20 h-20 rounded-full flex items-center justify-center 
-                                            border-4 shadow-xl transition-all duration-300 ease-out relative
-                                            ${
-                                                isAddButtonActive
-                                                    ? "bg-primary border-primary-hover shadow-primary/50 scale-105"
-                                                    : "bg-white border-primary shadow-primary/30 hover:shadow-primary/40"
-                                            }`}
-                                    >
-                                        <PlusIcon
-                                            className={`w-8 h-8 text-gray-800 transition-all duration-300 ease-out
-                                                ${
-                                                    isAddButtonActive
-                                                        ? "rotate-45 scale-110"
-                                                        : "rotate-0 scale-100"
-                                                }`}
-                                        />
-                                    </div>
-                                </button>
-                            );
-                        }
-
-                        // 일반 네비게이션 버튼들 (활성화 시 크기 증가 애니메이션)
+                    if (item.isSpecial) {
                         return (
                             <button
                                 key={item.id}
                                 onClick={() => handleNavClick(item.path)}
-                                className={`flex flex-col items-center justify-center py-2 px-3 rounded-xl
-                                      transition-all duration-300 ease-out min-w-16 relative
-                                      ${
-                                          isActive
-                                              ? "text-gray-800 transform scale-110"
-                                              : "text-gray-500 hover:text-gray-700 hover:scale-105"
-                                      }`}
+                                className={styles.specialButton}
                             >
-                                {/* 활성화 배경 효과 */}
-                                {isActive && (
-                                    <div
-                                        className="absolute inset-0 bg-primary/10 rounded-xl scale-105 
-                                              animate-pulse"
-                                    ></div>
-                                )}
-
-                                <div className="relative z-10 flex flex-col items-center">
-                                    {/* 활성화 상태에 따라 아이콘 선택 */}
-                                    {isActive && item.IconSolid ? (
-                                        <item.IconSolid
-                                            className={`w-6 h-6 mb-1 transition-all duration-300 ease-out
-                                                  scale-110 drop-shadow-sm`}
-                                        />
-                                    ) : (
-                                        <item.Icon
-                                            className={`w-6 h-6 mb-1 transition-all duration-300 ease-out
-                                                  scale-100`}
-                                        />
-                                    )}
-                                    <span
-                                        className={`text-xs font-medium transition-all duration-300 ease-out
-                                                ${
-                                                    isActive
-                                                        ? "font-bold scale-105"
-                                                        : "font-normal scale-100"
-                                                }`}
-                                    >
-                                        {item.label}
-                                    </span>
+                                <div
+                                    className={clsx(styles.specialButtonInner, {
+                                        [styles.active]: isAddButtonActive,
+                                    })}
+                                >
+                                    <PlusIcon
+                                        className={clsx(styles.plusIcon, {
+                                            [styles.active]: isAddButtonActive,
+                                        })}
+                                    />
                                 </div>
-
-                                {/* 활성화 점 표시 */}
-                                {isActive && (
-                                    <div
-                                        className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 
-                                              w-1 h-1 bg-primary rounded-full animate-bounce"
-                                    ></div>
-                                )}
                             </button>
                         );
-                    })}
+                    }
+
+                    return (
+                        <button
+                            key={item.id}
+                            onClick={() => handleNavClick(item.path)}
+                            className={clsx(styles.navButton, {
+                                [styles.active]: isActive,
+                            })}
+                        >
+                            {isActive && (
+                                <div className={styles.activeBg}></div>
+                            )}
+                            <div className={styles.iconContainer}>
+                                {isActive && item.IconSolid ? (
+                                    <item.IconSolid
+                                        className={clsx(
+                                            styles.icon,
+                                            styles.active
+                                        )}
+                                    />
+                                ) : (
+                                    <item.Icon className={styles.icon} />
+                                )}
+                                <span
+                                    className={clsx(styles.label, {
+                                        [styles.active]: isActive,
+                                    })}
+                                >
+                                    {item.label}
+                                </span>
+                            </div>
+                            {isActive && (
+                                <div className={styles.activeDot}></div>
+                            )}
+                        </button>
+                    );
+                })}
             </div>
         </nav>
     );

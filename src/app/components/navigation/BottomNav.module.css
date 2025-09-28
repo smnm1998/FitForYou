@@ -1,0 +1,64 @@
+.navContainer {
+    @apply fixed bottom-0 left-1/2 transform -translate-x-1/2 z-30 w-full max-w-2xl bg-white/95 backdrop-blur-lg border-t border-gray-200/50 shadow-lg;
+}
+
+.navWrapper {
+    @apply flex items-center justify-around px-4 py-2;
+}
+
+.navButton {
+    @apply flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all duration-300 ease-out min-w-16 relative text-gray-500 hover:text-gray-700 hover:scale-105;
+}
+
+.navButton.active {
+    @apply text-gray-800 transform scale-110; /* 수정됨 */
+}
+
+.activeBg {
+    @apply absolute inset-0 bg-primary/10 rounded-xl scale-105 animate-pulse;
+}
+
+.iconContainer {
+    @apply relative z-10 flex flex-col items-center;
+}
+
+.icon {
+    @apply w-6 h-6 mb-1 transition-all duration-300 ease-out scale-100;
+}
+
+.icon.active {
+    @apply scale-110 drop-shadow-sm; /* 수정됨 */
+}
+
+.label {
+    @apply text-xs font-medium transition-all duration-300 ease-out font-normal scale-100;
+}
+
+.label.active {
+    @apply font-bold scale-105;
+}
+
+.activeDot {
+    @apply absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary rounded-full animate-bounce;
+}
+
+/* 특별 버튼 (가운데 추가하기) */
+.specialButton {
+    @apply flex justify-center items-center relative -mt-8 hover:scale-110 transition-all duration-300 ease-out;
+}
+
+.specialButtonInner {
+    @apply w-20 h-20 rounded-full flex items-center justify-center border-4 shadow-xl transition-all duration-300 ease-out relative bg-white border-primary shadow-primary/30 hover:shadow-primary/40; /* 수정됨 */
+}
+
+.specialButtonInner.active {
+    @apply bg-primary border-primary-hover shadow-primary/50 scale-105; /* 수정됨 */
+}
+
+.plusIcon {
+    @apply w-8 h-8 text-gray-800 transition-all duration-300 ease-out rotate-0 scale-100;
+}
+
+.plusIcon.active {
+    @apply rotate-45 scale-110;
+}
