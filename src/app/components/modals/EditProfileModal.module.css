@@ -1,0 +1,79 @@
+.overlay {
+    @apply fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-5;
+}
+
+.modal {
+    @apply bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto;
+}
+
+.header {
+    @apply flex justify-between items-center p-6 border-b border-gray-200;
+}
+
+.title {
+    @apply text-xl font-bold text-gray-800;
+}
+
+.closeButton {
+    @apply p-2 hover:bg-gray-100 rounded-full transition-colors duration-200;
+}
+
+.form {
+    @apply p-6 space-y-4;
+}
+
+.formGroup {
+    @apply space-y-2;
+}
+
+.label {
+    @apply block text-sm font-semibold text-gray-700;
+}
+
+.input {
+    @apply w-full p-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:outline-none transition-colors duration-200;
+}
+
+.inputError {
+    @apply border-error;
+}
+
+.textarea {
+    @apply w-full p-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:outline-none resize-none transition-colors duration-200;
+}
+
+.errorMessage {
+    @apply text-error text-sm font-medium mt-1;
+}
+
+.gridTwo {
+    @apply grid grid-cols-2 gap-3;
+}
+
+.divider {
+    @apply border-t border-gray-200 pt-4;
+}
+
+.checkboxLabel {
+    @apply flex items-center gap-2 cursor-pointer;
+}
+
+.checkbox {
+    @apply w-4 h-4 cursor-pointer;
+}
+
+.passwordSection {
+    @apply space-y-3;
+}
+
+.buttonGroup {
+    @apply flex gap-3 pt-4;
+}
+
+.cancelButton {
+    @apply flex-1 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-colors duration-200;
+}
+
+.submitButton {
+    @apply flex-1 py-3 bg-success text-white rounded-xl font-semibold hover:bg-success/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200;
+}
