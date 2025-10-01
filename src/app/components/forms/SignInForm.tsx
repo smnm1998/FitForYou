@@ -115,9 +115,8 @@ export default function SignInForm() {
                 >
                     {isSubmitting ? (
                         <span className={styles.loadingSpinnerContainer}>
-                            <div className={styles.loadingSpinner}>
-                                로그인 중 ...
-                            </div>
+                            <div className={styles.loadingSpinner}></div>
+                            로그인 중 ...
                         </span>
                     ) : (
                         "로그인"
