@@ -1,0 +1,167 @@
+.container {
+    @apply min-h-screen bg-gray-50 pb-24;
+}
+
+.innerContainer {
+    @apply max-w-2xl mx-auto px-5 pt-20;
+}
+
+/* Header */
+.header {
+    @apply text-left mb-6;
+}
+
+.title {
+    @apply text-3xl font-black text-gray-800;
+}
+
+/* Loading State */
+.loadingContainer {
+    @apply animate-pulse space-y-6;
+}
+
+.loadingTitle {
+    @apply h-8 bg-gray-200 rounded w-32;
+}
+
+.loadingProfile {
+    @apply flex items-center gap-4;
+}
+
+.loadingAvatar {
+    @apply w-20 h-20 bg-gray-200 rounded-full;
+}
+
+.loadingInfo {
+    @apply flex-1 space-y-2;
+}
+
+.loadingName {
+    @apply h-6 bg-gray-200 rounded w-24;
+}
+
+.loadingMeta {
+    @apply h-4 bg-gray-200 rounded w-32;
+}
+
+/* Section */
+.section {
+    @apply mb-6;
+}
+
+/* Profile Card */
+.profileCard {
+    @apply flex items-center gap-6 mb-6;
+}
+
+.avatarContainer {
+    @apply w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center;
+}
+
+.profileInfo {
+    @apply flex-1;
+}
+
+.profileName {
+    @apply text-xl font-bold text-gray-800 mb-1;
+}
+
+.profileMeta {
+    @apply text-gray-600 text-sm mb-2;
+}
+
+.profileStats {
+    @apply flex gap-4 text-sm text-gray-600;
+}
+
+.editButton {
+    @apply p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors duration-200;
+}
+
+/* Health Info */
+.healthInfo {
+    @apply p-4 bg-yellow-50 border border-yellow-200 rounded-xl;
+}
+
+.healthTitle {
+    @apply font-semibold text-gray-800 mb-1;
+}
+
+.healthText {
+    @apply text-sm text-gray-600;
+}
+
+/* Menu Section */
+.menuSection {
+    @apply mb-6 space-y-3;
+}
+
+.menuCard {
+    @apply bg-white/90 backdrop-blur-sm rounded-2xl border border-primary/30 p-5 shadow-medium hover:shadow-lg transition-all duration-200 cursor-pointer hover:transform hover:-translate-y-1;
+}
+
+.menuContent {
+    @apply flex items-center gap-4;
+}
+
+.menuIconRed {
+    @apply w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center;
+}
+
+.menuIconBlue {
+    @apply w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center;
+}
+
+.menuInfo {
+    @apply flex-1;
+}
+
+.menuTitle {
+    @apply font-bold text-gray-800 mb-1;
+}
+
+.menuDescription {
+    @apply text-sm text-gray-600;
+}
+
+.menuArrow {
+    @apply text-gray-400 text-xl;
+}
+
+/* Action Section */
+.actionSection {
+    @apply mb-6 space-y-3;
+}
+
+.logoutButton {
+    @apply w-full bg-white/90 backdrop-blur-sm rounded-2xl border border-primary/30 shadow-medium p-5 bg-gray-50 hover:bg-gray-100 transition-colors duration-200;
+}
+
+.deleteButton {
+    @apply w-full bg-white/90 backdrop-blur-sm rounded-2xl shadow-medium p-5 bg-red-50 hover:bg-red-100 border border-red-200 transition-colors duration-200;
+}
+
+.actionContent {
+    @apply flex items-center justify-center gap-3;
+}
+
+.actionText {
+    @apply font-semibold text-gray-600;
+}
+
+.deleteText {
+    @apply font-semibold text-red-600;
+}
+
+/* Footer */
+.footer {
+    @apply text-center text-gray-500 space-y-1;
+}
+
+.footerTitle {
+    @apply text-sm font-semibold;
+}
+
+.footerSubtitle {
+    @apply text-xs;
+}
