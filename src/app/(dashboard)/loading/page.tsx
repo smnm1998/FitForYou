@@ -3,21 +3,17 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
+import { ArrowPathIcon } from "@heroicons/react/24/outline";
+import styles from "./LoadingPage.module.css";
 
-const loadingMessages = [
-    "조금만 기다려주세요...",
-    "AI가 맞춤형 계획을 만들고 있어요...",
-    "거의 다 됐어요!",
-    "최고의 결과를 위해 노력하고 있어요...",
-];
-
-const icons = [
-    { emoji: "🏃‍♂️", name: "운동" },
-    { emoji: "🍎", name: "영양" },
-    { emoji: "💪", name: "근력" },
-    { emoji: "🧘‍♀️", name: "웰빙" },
-    { emoji: "⚡", name: "에너지" },
-];
+const getMessageByProgress = (progress: number): string => {
+    if (progress < 10) return "요청을 처리하고 있어요...";
+    if (progress < 30) return "AI가 데이터를 분석하고 있어요...";
+    if (progress < 50) return "맞춤형 계획을 설계하고 있어요...";
+    if (progress < 70) return "세부 내용을 조정하고 있어요...";
+    if (progress < 90) return "거의 다 됐어요...";
+    return "최종 확인 중이에요...";
+};
 
 export default function LoadingPage() {
     const router = useRouter();
@@ -26,24 +22,12 @@ export default function LoadingPage() {
     const type = searchParams.get("type") as "diet" | "workout" | null;
     const jobId = searchParams.get("jobId");
 
-    const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
-    const [currentIconIndex, setCurrentIconIndex] = useState(0);
+    const [progress, setProgress] = useState(0);
+    const [message, setMessage] = useState("요청을 처리하고 있어요...");
 
     useEffect(() => {
-        // 메시지 순환
-        const messageInterval = setInterval(() => {
-            setCurrentMessageIndex(
-                (prev) => (prev + 1) % loadingMessages.length
-            );
-        }, 3000);
-
-        // 아이콘 순환 (오른쪽 페이드 애니메이션)
-        const iconInterval = setInterval(() => {
-            setCurrentIconIndex((prev) => (prev + 1) % icons.length);
-        }, 2500);
-
-        // 작업 상태 폴링 (jobId가 있는 경우)
         let pollingInterval: NodeJS.Timeout | null = null;
+
         if (jobId) {
             pollingInterval = setInterval(async () => {
                 try {
@@ -53,98 +37,99 @@ export default function LoadingPage() {
                     if (data.success) {
                         const status = data.data;
 
+                        // 진행도
+                        const currentProgress = status.progress || 0;
+                        setProgress(currentProgress);
+                        setMessage(getMessageByProgress(currentProgress));
+
                         if (status.status === "COMPLETED") {
-                            console.log("✅ 작업 완료, 결과 페이지로 이동");
+                            console.log("✅ 작업 완료, 저장 API 호출 중...");
                             if (pollingInterval) clearInterval(pollingInterval);
 
-                            // React Query 캐시 무효화
-                            queryClient.invalidateQueries({
-                                queryKey:
-                                    type === "diet"
-                                        ? ["saved-diets"]
-                                        : ["saved-workouts"],
-                            });
-                            queryClient.invalidateQueries({
-                                queryKey: ["dashboard-stats"],
-                            });
+                            // 완료 메시지
+                            setProgress(100);
+                            setMessage("완료되었습니다! 🎉");
 
-                            setTimeout(() => {
-                                // 결과 페이지로 리다이렉트 (최신 데이터가 저장된 항목의 모달이 열림)
-                                const redirectTo =
-                                    type === "diet"
-                                        ? "/diet?auto-open=true"
-                                        : "/workout?auto-open=true";
-                                router.push(redirectTo);
-                            }, 1000);
+                            // 저장 API 호출 -> savedId 획득
+                            const saveResponse = await fetch(
+                                `/api/jobs/${jobId}/save`,
+                                { method: "POST" }
+                            );
+                            const saveData = await saveResponse.json();
+
+                            if (saveData.success && saveData.savedId) {
+                                queryClient.invalidateQueries({
+                                    queryKey:
+                                        type === "diet"
+                                            ? ["saved-diets"]
+                                            : ["saved-workouts"],
+                                });
+                                queryClient.invalidateQueries({
+                                    queryKey: ["dashboard-stats"],
+                                });
+
+                                setTimeout(() => {
+                                    const redirectTo =
+                                        type === "diet"
+                                            ? `/diet?openId=${saveData.savedId}`
+                                            : `/workout?openId=${saveData.savedId}`;
+                                    router.push(redirectTo);
+                                }, 1000);
+                            } else {
+                                console.error("저장 실패: ", saveData.error);
+                                router.push(
+                                    `/create?type=${type}&error=save_failed`
+                                );
+                            }
                         } else if (status.status === "FAILED") {
-                            console.error("❌ 작업 실패:", status.error);
+                            console.error("❌ 작업 실패: ", status.error);
                             if (pollingInterval) clearInterval(pollingInterval);
-                            // 에러 페이지 또는 생성 페이지로 돌아가기
                             router.push(
                                 `/create?type=${type}&error=generation_failed`
                             );
-                        } else {
-                            console.log(
-                                "🔄 작업 진행 중:",
-                                status.status,
-                                `${status.progress || 0}%`
-                            );
                         }
                     } else {
-                        console.error("❌ 작업 상태 조회 실패:", data.error);
+                        console.error("❌ 작업 상태 조회 실패: ", data.error);
                         if (pollingInterval) clearInterval(pollingInterval);
                         router.push(
                             `/create?type=${type}&error=status_check_failed`
                         );
                     }
                 } catch (error) {
-                    console.error("폴링 오류:", error);
+                    console.error("폴링 오류: ", error);
                 }
-            }, 1000); // 1초마다 체크
+            }, 1000);
         } else {
-            // jobId가 없는 경우 create 페이지로 돌아가기
-            console.error("작업 ID가 없습니다. 생성 페이지로 돌아갑니다.");
+            console.error("작업 ID가 없습니다.");
             setTimeout(() => {
                 router.push(`/create?type=${type}&error=missing_job_id`);
             }, 3000);
         }
 
         return () => {
-            clearInterval(messageInterval);
-            clearInterval(iconInterval);
             if (pollingInterval) clearInterval(pollingInterval);
         };
     }, [jobId, type, router, queryClient]);
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 flex items-center justify-center p-6">
-            <div className="text-center max-w-lg w-full">
-                {/* 아이콘 애니메이션 */}
-                <div className="mb-16 h-28 flex items-center justify-center relative">
-                    {icons.map((icon, index) => (
-                        <div
-                            key={index}
-                            className={`absolute transition-all duration-1000 ease-in-out ${
-                                index === currentIconIndex
-                                    ? "opacity-100 translate-x-0 scale-100"
-                                    : index < currentIconIndex
-                                    ? "opacity-0 -translate-x-8 scale-95"
-                                    : "opacity-0 translate-x-8 scale-95"
-                            }`}
-                        >
-                            <div className="w-40 h-40 mx-auto rounded-full bg-white shadow-xl flex items-center justify-center">
-                                <span className="text-7xl">{icon.emoji}</span>
-                            </div>
-                        </div>
-                    ))}
+        <div className={styles.container}>
+            <div className={styles.content}>
+                <div className={styles.iconWrapper}>
+                    <div className={styles.iconCircle}>
+                        <ArrowPathIcon className={styles.spinIcon} />
+                    </div>
                 </div>
 
-                {/* 메시지 */}
-                <div>
-                    <p className="text-gray-700 text-base font-medium animate-pulse">
-                        {loadingMessages[currentMessageIndex]}
-                    </p>
+                <div className={styles.progressBarWrapper}>
+                    <div className={styles.progressBarBg}>
+                        <div
+                            className={styles.progressBarFill}
+                            style={{ width: `${progress}%` }}
+                        ></div>
+                        <p className={styles.progressText}>{progress}%</p>
+                    </div>
                 </div>
+                <p className={styles.message}>{message}</p>
             </div>
         </div>
     );

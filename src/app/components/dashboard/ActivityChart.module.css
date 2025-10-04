@@ -1,0 +1,19 @@
+.container {
+    @apply space-y-4 mb-6;
+}
+
+.chartCard {
+    @apply bg-white rounded-2xl p-5 border border-gray-200 shadow-sm;
+}
+
+.chartTitle {
+    @apply text-lg font-bold text-gray-800 mb-4;
+}
+
+.lineChart {
+    @apply h-48;
+}
+
+.doughnutChart {
+    @apply h-56;
+}

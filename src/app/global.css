@@ -1,7 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import url('https://cdn.rawgit.com/moonspam/NanumSquare/master/nanumsquare.css');
+@font-face {
+    font-family: "NoonnuBasicGothic";
+    src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noon-2410@1.0/NoonnuBasicGothicRegular.woff2")
+        format("woff2");
+    font-weight: normal;
+    font-display: swap;
+}
 
 :root {
     --primary-color: #f0fd82;
@@ -19,7 +25,7 @@
 }
 
 body {
-    font-family: 'NanumSquare', sans-serif;
+    font-family: "NoonnuBasicGothic", sans-serif;
     background-color: #f9f9f9;
     color: var(--text-color);
     line-height: 1.6;
@@ -53,7 +59,7 @@ body {
     .container {
         padding: 15px;
     }
-    
+
     .card {
         @apply p-6;
     }

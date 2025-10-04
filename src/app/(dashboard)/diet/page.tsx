@@ -88,28 +88,23 @@ export default function DietPage() {
     // 로딩 페이지에서 리다이렉션된 경우에만 자동으로 모달 열기
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
-        const shouldAutoOpen = params.get("auto-open") === "true";
+        const openId = params.get("openId"); // ✅ openId로 변경
 
-        if (
-            !isLoading &&
-            savedDiets.length > 0 &&
-            !hasAutoOpened &&
-            shouldAutoOpen
-        ) {
-            const latestDiet = savedDiets[0]; // 첫 번째 항목이 가장 최신
-            const now = new Date();
-            const createdTime = new Date(latestDiet.createdAt);
-            const timeDiff = now.getTime() - createdTime.getTime();
+        if (!isLoading && savedDiets.length > 0 && !hasAutoOpened && openId) {
+            // ✅ ID로 정확한 식단 찾기
+            const targetDiet = savedDiets.find(
+                (diet) => diet.id.toString() === openId
+            );
 
-            // 1분 이내에 생성된 식단이면 자동으로 모달 열기
-            if (timeDiff < 60 * 1000) {
-                // 1분 = 60 * 1000ms
-                setSelectedDiet(latestDiet);
+            if (targetDiet) {
+                setSelectedDiet(targetDiet);
                 setHasAutoOpened(true);
                 document.body.style.overflow = "hidden";
 
                 // URL에서 파라미터 제거
                 window.history.replaceState({}, "", window.location.pathname);
+            } else {
+                console.warn(`식단 ID ${openId}를 찾을 수 없습니다.`);
             }
         }
     }, [isLoading, savedDiets, hasAutoOpened]);
@@ -240,11 +235,17 @@ export default function DietPage() {
                                                 <div className="flex flex-wrap gap-2 text-sm text-gray-500">
                                                     <span className="flex items-center gap-1">
                                                         <ClockIcon className="w-3 h-3 text-green-500" />
-                                                        {getTimeSince(diet.createdAt)}
+                                                        {getTimeSince(
+                                                            diet.createdAt
+                                                        )}
                                                     </span>
-                                                    <span className="text-gray-400">•</span>
+                                                    <span className="text-gray-400">
+                                                        •
+                                                    </span>
                                                     <span>
-                                                        {formatDate(diet.createdAt)}
+                                                        {formatDate(
+                                                            diet.createdAt
+                                                        )}
                                                     </span>
                                                 </div>
                                             </div>
@@ -326,68 +327,111 @@ export default function DietPage() {
                         >
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {/* 조언 섹션 - 조언이 있고 유효한 데이터를 가진 경우에만 표시 */}
-                                {selectedDiet.advice && selectedDiet.advice.summary && (
-                                    <div className="md:col-span-2 rounded-3xl p-6 bg-white shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
-                                        <div className="flex items-center gap-3 mb-5">
-                                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-                                                <span className="text-white text-lg">💡</span>
-                                            </div>
-                                            <div>
-                                                <h3 className="font-bold text-gray-900 text-lg">AI 영양 조언</h3>
-                                                <p className="text-xs text-gray-500">개인 맞춤 식단 가이드</p>
-                                            </div>
-                                        </div>
-
-                                        {/* 전체 요약 */}
-                                        <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border-l-4 border-blue-500">
-                                            <div className="flex items-start gap-2 mb-2">
-                                                <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                                    <span className="text-white text-xs">📋</span>
+                                {selectedDiet.advice &&
+                                    selectedDiet.advice.summary && (
+                                        <div className="md:col-span-2 rounded-3xl p-6 bg-white shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+                                            <div className="flex items-center gap-3 mb-5">
+                                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                                                    <span className="text-white text-lg">
+                                                        💡
+                                                    </span>
                                                 </div>
-                                                <h4 className="font-semibold text-blue-900 text-sm">핵심 요약</h4>
+                                                <div>
+                                                    <h3 className="font-bold text-gray-900 text-lg">
+                                                        AI 영양 조언
+                                                    </h3>
+                                                    <p className="text-xs text-gray-500">
+                                                        개인 맞춤 식단 가이드
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <p className="text-sm text-blue-800 leading-relaxed ml-8">{selectedDiet.advice.summary}</p>
-                                        </div>
 
-                                        <div className="grid md:grid-cols-2 gap-4">
-                                            {/* 팁들 */}
-                                            <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl p-4">
-                                                <div className="flex items-center gap-2 mb-3">
-                                                    <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center">
-                                                        <span className="text-white text-xs">✨</span>
+                                            {/* 전체 요약 */}
+                                            <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border-l-4 border-blue-500">
+                                                <div className="flex items-start gap-2 mb-2">
+                                                    <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                                        <span className="text-white text-xs">
+                                                            📋
+                                                        </span>
                                                     </div>
-                                                    <h4 className="font-semibold text-emerald-900 text-sm">추천 사항</h4>
+                                                    <h4 className="font-semibold text-blue-900 text-sm">
+                                                        핵심 요약
+                                                    </h4>
                                                 </div>
-                                                <div className="space-y-2.5">
-                                                    {selectedDiet.advice.tips.map((tip, index) => (
-                                                        <div key={index} className="flex items-start gap-2.5">
-                                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2 flex-shrink-0"></div>
-                                                            <p className="text-sm text-emerald-800 leading-relaxed">{tip}</p>
-                                                        </div>
-                                                    ))}
-                                                </div>
+                                                <p className="text-sm text-blue-800 leading-relaxed ml-8">
+                                                    {
+                                                        selectedDiet.advice
+                                                            .summary
+                                                    }
+                                                </p>
                                             </div>
 
-                                            {/* 주의사항 */}
-                                            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4">
-                                                <div className="flex items-center gap-2 mb-3">
-                                                    <div className="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center">
-                                                        <span className="text-white text-xs">⚠️</span>
-                                                    </div>
-                                                    <h4 className="font-semibold text-amber-900 text-sm">주의사항</h4>
-                                                </div>
-                                                <div className="space-y-2.5">
-                                                    {selectedDiet.advice.warnings.map((warning, index) => (
-                                                        <div key={index} className="flex items-start gap-2.5">
-                                                            <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-2 flex-shrink-0"></div>
-                                                            <p className="text-sm text-amber-800 leading-relaxed">{warning}</p>
+                                            <div className="grid md:grid-cols-2 gap-4">
+                                                {/* 팁들 */}
+                                                <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl p-4">
+                                                    <div className="flex items-center gap-2 mb-3">
+                                                        <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center">
+                                                            <span className="text-white text-xs">
+                                                                ✨
+                                                            </span>
                                                         </div>
-                                                    ))}
+                                                        <h4 className="font-semibold text-emerald-900 text-sm">
+                                                            추천 사항
+                                                        </h4>
+                                                    </div>
+                                                    <div className="space-y-2.5">
+                                                        {selectedDiet.advice.tips.map(
+                                                            (tip, index) => (
+                                                                <div
+                                                                    key={index}
+                                                                    className="flex items-start gap-2.5"
+                                                                >
+                                                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2 flex-shrink-0"></div>
+                                                                    <p className="text-sm text-emerald-800 leading-relaxed">
+                                                                        {tip}
+                                                                    </p>
+                                                                </div>
+                                                            )
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* 주의사항 */}
+                                                <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4">
+                                                    <div className="flex items-center gap-2 mb-3">
+                                                        <div className="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center">
+                                                            <span className="text-white text-xs">
+                                                                ⚠️
+                                                            </span>
+                                                        </div>
+                                                        <h4 className="font-semibold text-amber-900 text-sm">
+                                                            주의사항
+                                                        </h4>
+                                                    </div>
+                                                    <div className="space-y-2.5">
+                                                        {selectedDiet.advice.warnings.map(
+                                                            (
+                                                                warning,
+                                                                index
+                                                            ) => (
+                                                                <div
+                                                                    key={index}
+                                                                    className="flex items-start gap-2.5"
+                                                                >
+                                                                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-2 flex-shrink-0"></div>
+                                                                    <p className="text-sm text-amber-800 leading-relaxed">
+                                                                        {
+                                                                            warning
+                                                                        }
+                                                                    </p>
+                                                                </div>
+                                                            )
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                )}
+                                    )}
 
                                 {getUpcomingDietPlan(selectedDiet.weeklyDiet)
                                     .length > 0 ? (

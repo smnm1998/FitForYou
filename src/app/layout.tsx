@@ -1,9 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
 import "./global.css";
 import Providers from "@/app/components/providers/Providers";
-
-const inter = Inter({ subsets: ["latin"] });
 
 // Viewport 설정 분리
 export const viewport: Viewport = {
@@ -25,7 +22,7 @@ export default function RootLayout({
 }) {
     return (
         <html lang="ko">
-            <body className={inter.className}>
+            <body>
                 <Providers>{children}</Providers>
             </body>
         </html>

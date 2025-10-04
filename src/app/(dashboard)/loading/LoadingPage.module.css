@@ -1,0 +1,39 @@
+.container {
+    @apply fixed inset-0 bg-gradient-to-b from-primary/10 to-primary/5 flex items-center justify-center p-6 overflow-hidden;
+}
+
+.content {
+    @apply text-center max-w-lg w-full;
+}
+
+.iconWrapper {
+    @apply mb-8 flex items-center justify-center;
+}
+
+.iconCircle {
+    @apply w-32 h-32 rounded-full bg-white shadow-xl flex items-center justify-center;
+}
+
+.spinIcon {
+    @apply w-16 h-16 text-primary animate-spin;
+}
+
+.progressBarWrapper {
+    @apply mb-6;
+}
+
+.progressBarBg {
+    @apply w-full h-3 bg-gray-200 rounded-full overflow-hidden mb-2;
+}
+
+.progressBarFill {
+    @apply h-full bg-primary transition-all duration-500 ease-out;
+}
+
+.progressText {
+    @apply text-sm font-semibold text-gray-600;
+}
+
+.message {
+    @apply text-gray-700 text-base font-medium;
+}

@@ -1,0 +1,91 @@
+/* 에러 컨테이너 */
+.errorContainer {
+    @apply min-h-screen bg-gray-50 flex items-center justify-center p-5;
+}
+
+.errorContent {
+    @apply text-center;
+}
+
+.errorTitle {
+    @apply text-xl font-bold text-gray-800 mb-2;
+}
+
+.errorMessage {
+    @apply text-gray-600 mb-4;
+}
+
+.retryButton {
+    @apply bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-semibold 
+        py-3 px-6 rounded-xl transition-colors duration-200;
+}
+
+/* 메인 컨테이너 */
+.container {
+    @apply min-h-screen bg-gray-50 p-5;
+}
+
+.wrapper {
+    @apply max-w-2xl mx-auto;
+}
+
+/* 헤더 */
+.header {
+    @apply flex justify-between items-center mb-6 pt-5;
+}
+
+.title {
+    @apply text-3xl font-black text-gray-800;
+}
+
+.dateInfo {
+    @apply flex items-center gap-2 text-gray-600;
+}
+
+.calendarIcon {
+    @apply w-4 h-4;
+}
+
+.dateText {
+    @apply text-sm font-medium;
+}
+
+/* 통계 섹션 */
+.statsSection {
+    @apply mb-6;
+}
+
+.statsGrid {
+    @apply grid grid-cols-2 gap-4;
+}
+
+/* 빠른 액션 섹션 */
+.quickActionSection {
+    @apply mb-6;
+}
+
+.sectionTitle {
+    @apply text-xl font-bold text-gray-800 mb-4;
+}
+
+.createButton {
+    @apply w-full block mb-3;
+}
+
+.createButtonContent {
+    @apply bg-yellow-400 hover:bg-yellow-500 rounded-2xl p-4 
+        border border-yellow-300 shadow-sm transition-all duration-200 
+        hover:transform hover:-translate-y-1 flex items-center justify-between;
+}
+
+.createButtonText {
+    @apply font-bold text-gray-800 text-lg;
+}
+
+.createButtonIcon {
+    @apply w-6 h-6 text-gray-800 flex-shrink-0;
+}
+
+.actionCards {
+    @apply space-y-4;
+}
