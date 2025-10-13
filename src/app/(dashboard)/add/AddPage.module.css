@@ -1,0 +1,43 @@
+.container {
+    @apply min-h-screen bg-gray-50 pb-24;
+}
+
+.wrapper {
+    @apply max-w-2xl mx-auto px-5 pt-20;
+}
+
+.header {
+    @apply text-center mb-8;
+}
+
+.title {
+    @apply text-3xl font-bold text-gray-800 mb-2;
+}
+
+.subtitle {
+    @apply text-gray-600;
+}
+
+.cardList {
+    @apply space-y-5;
+}
+
+.guideSection {
+    @apply mt-8 bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-medium border border-primary/30 bg-primary/5;
+}
+
+.guideTitle {
+    @apply font-bold text-gray-800 mb-3 flex items-center gap-2;
+}
+
+.guideList {
+    @apply space-y-2 text-sm text-gray-600;
+}
+
+.guideItem {
+    @apply flex items-start gap-2;
+}
+
+.guideNumber {
+    @apply text-primary font-bold;
+}

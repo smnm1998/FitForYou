@@ -560,7 +560,7 @@ export default function WorkoutPage() {
                                                 )}
                                             </div>
                                             <div className="space-y-2">
-                                                {day.workoutPlan.exercises.map(
+                                                {Array.isArray(day.workoutPlan.exercises) && day.workoutPlan.exercises.map(
                                                     (exercise, index) => (
                                                         <div
                                                             key={index}

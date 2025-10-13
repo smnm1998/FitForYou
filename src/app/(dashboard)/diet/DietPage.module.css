@@ -1,0 +1,39 @@
+.container {
+    @apply min-h-screen bg-gray-50 pb-24;
+}
+
+.wrapper {
+    @apply max-w-2xl mx-auto px-5 pt-20;
+}
+
+.header {
+    @apply text-left mb-6;
+}
+
+.title {
+    @apply text-3xl font-black text-gray-800 mb-2;
+}
+
+.subtitle {
+    @apply text-gray-600;
+}
+
+.loadingContainer {
+    @apply flex items-center justify-center py-12;
+}
+
+.spinner {
+    @apply w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin;
+}
+
+.emptyCard {
+    @apply bg-white/90 backdrop-blur-sm rounded-2xl p-12 shadow-medium border border-primary/30 text-center;
+}
+
+.emptyTitle {
+    @apply text-lg font-semibold;
+}
+
+.cardList {
+    @apply space-y-4;
+}
