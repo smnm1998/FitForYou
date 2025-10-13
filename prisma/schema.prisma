@@ -68,11 +68,15 @@ model SavedDiet {
   dinner        String?  @db.Text
   snack         String?  @db.Text
   totalCalories Int?     @map("total_calories")
+  isFavorite    Boolean  @default(false) @map("is_favorite")
+  isThisWeek    Boolean  @default(false) @map("is_this_week")
   createdAt     DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, date])
+  @@index([userId, isFavorite])
+  @@index([userId, isThisWeek])
   @@index([createdAt])
   @@map("saved_diets")
 }
@@ -88,11 +92,15 @@ model SavedWorkout {
   targetMuscles     String?   @map("target_muscles") @db.Text
   exercises         String?   @db.Text
   estimatedCalories Int?      @map("estimated_calories")
+  isFavorite        Boolean   @default(false) @map("is_favorite")
+  isThisWeek        Boolean   @default(false) @map("is_this_week")
   createdAt         DateTime  @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, date])
+  @@index([userId, isFavorite])
+  @@index([userId, isThisWeek])
   @@index([workoutType])
   @@index([intensity])
   @@index([createdAt])
