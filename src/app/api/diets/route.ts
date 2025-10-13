@@ -34,6 +34,8 @@ export async function GET(request: NextRequest) {
                 dinner: true,
                 snack: true,
                 totalCalories: true,
+                isFavorite: true,
+                isThisWeek: true,
                 createdAt: true,
             },
         });
@@ -79,7 +81,7 @@ export async function GET(request: NextRequest) {
                 id: paginatedDiets[0].id,
                 title: paginatedDiets[0].title,
                 hasAdvice: !!paginatedDiets[0].advice,
-                advice: paginatedDiets[0].advice
+                advice: paginatedDiets[0].advice,
             });
         }
 
@@ -118,7 +120,10 @@ function processGroupData(group: any[]) {
     // 모든 항목을 순회하여 AI 메타데이터 찾기
     for (const item of group) {
         if (item.snack) {
-            console.log("🔍 [DEBUG] snack 필드 내용 (ID: " + item.id + "):", item.snack);
+            console.log(
+                "🔍 [DEBUG] snack 필드 내용 (ID: " + item.id + "):",
+                item.snack
+            );
             try {
                 const parsed = JSON.parse(item.snack);
                 if (parsed.aiTitle) {
@@ -133,7 +138,10 @@ function processGroupData(group: any[]) {
                 }
             } catch (error) {
                 // JSON 파싱 실패는 일반적인 간식 텍스트이므로 무시하고 계속
-                console.log("🔍 [DEBUG] 일반 간식 텍스트 (ID: " + item.id + "):", item.snack);
+                console.log(
+                    "🔍 [DEBUG] 일반 간식 텍스트 (ID: " + item.id + "):",
+                    item.snack
+                );
             }
         }
     }
@@ -143,12 +151,12 @@ function processGroupData(group: any[]) {
         const createdDate = new Date(firstItem.createdAt);
         const dateString = createdDate.toLocaleDateString("ko-KR", {
             month: "short",
-            day: "numeric"
+            day: "numeric",
         });
         const timeString = createdDate.toLocaleTimeString("ko-KR", {
             hour: "2-digit",
             minute: "2-digit",
-            hour12: false
+            hour12: false,
         });
         aiTitle = `맞춤형 식단 - ${dateString} ${timeString}`;
         console.log("🔄 [DEBUG] 폴백 제목 생성:", aiTitle);
@@ -187,6 +195,7 @@ function processGroupData(group: any[]) {
 
     return {
         id: `diet_group_${firstItem.createdAt.getTime()}`,
+        firstDietId: firstItem.id,
         title: aiTitle,
         description: aiDescription,
         advice: aiAdvice,
@@ -195,6 +204,8 @@ function processGroupData(group: any[]) {
         isCompleteWeek,
         avgCalories,
         totalDays: group.length,
+        isFavorite: firstItem.isFavorite || false,
+        isThisWeek: firstItem.isThisWeek || false,
     };
 }
 
