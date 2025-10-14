@@ -1,0 +1,247 @@
+.overlay {
+    @apply fixed inset-0 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4;
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+.modal {
+    @apply bg-white rounded-3xl w-full max-w-6xl flex flex-col shadow-2xl border overflow-hidden;
+    height: 85vh;
+    border-color: rgba(229, 231, 235, 0.5);
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(1rem);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.header {
+    @apply flex-shrink-0 flex justify-between items-center p-4 sm:p-6 border-b bg-gradient-to-r from-green-50 to-emerald-50 backdrop-blur-sm;
+    border-color: rgba(229, 231, 235, 0.6);
+}
+
+.headerContent {
+    @apply flex items-center gap-3 sm:gap-4 flex-1 min-w-0;
+}
+
+.iconWrapper {
+    @apply w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl sm:rounded-2xl flex items-center justify-center
+        shadow-lg flex-shrink-0;
+}
+
+.icon {
+    @apply text-lg sm:text-xl;
+}
+
+.titleSection {
+    @apply min-w-0 flex-1;
+}
+
+.title {
+    @apply text-lg sm:text-xl md:text-2xl font-bold text-gray-800 truncate;
+}
+
+.subtitle {
+    @apply text-xs sm:text-sm text-gray-600 mt-1 font-medium truncate;
+}
+
+.closeBtn {
+    @apply w-8 h-8 sm:w-10 sm:h-10 hover:bg-white rounded-lg sm:rounded-xl flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 flex-shrink-0 ml-2;
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+.closeIcon {
+    @apply w-5 h-5 sm:w-6 sm:h-6 text-gray-600 hover:text-gray-800 transition-colors;
+}
+
+.content {
+    @apply flex-1 overflow-y-auto p-6 sm:p-8;
+    background-color: rgba(249, 250, 251, 0.3);
+}
+
+.contentGrid {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+}
+
+/* AI 조언 섹션 */
+.adviceSection {
+    @apply md:col-span-2 rounded-3xl p-6 bg-white shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300;
+}
+
+.adviceHeader {
+    @apply flex items-center gap-3 mb-5;
+}
+
+.adviceIconWrapper {
+    @apply w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-lg;
+}
+
+.adviceTitle {
+    @apply font-bold text-gray-900 text-lg;
+}
+
+.adviceSubtitle {
+    @apply text-xs text-gray-500;
+}
+
+.summary {
+    @apply mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border-l-4 border-blue-500;
+}
+
+.summaryIcon {
+    @apply w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs inline-block mr-2;
+}
+
+.summaryTitle {
+    @apply font-semibold text-blue-900 text-sm inline-block mb-2;
+}
+
+.summaryText {
+    @apply text-sm text-blue-800 leading-relaxed ml-8;
+}
+
+.adviceGrid {
+    @apply grid md:grid-cols-2 gap-4;
+}
+
+.tipsSection {
+    @apply bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl p-4;
+}
+
+.tipsHeader {
+    @apply flex items-center gap-2 mb-3;
+}
+
+.tipsIcon {
+    @apply w-6 h-6 rounded-full bg-emerald-500 text-white text-xs flex items-center justify-center;
+}
+
+.tipsList {
+    @apply space-y-2.5;
+}
+
+.tipItem {
+    @apply flex items-start gap-2.5;
+}
+
+.warningsSection {
+    @apply bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4;
+}
+
+.warningsHeader {
+    @apply flex items-center gap-2 mb-3;
+}
+
+.warningIcon {
+    @apply w-6 h-6 rounded-full bg-amber-500 text-white text-xs flex items-center justify-center;
+}
+
+.warningsList {
+    @apply space-y-2.5;
+}
+
+.warningItem {
+    @apply flex items-start gap-2.5;
+}
+
+.bullet {
+    @apply w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2 flex-shrink-0;
+}
+
+/* 하루 식단 카드 */
+.dayCard {
+    @apply rounded-2xl p-5 border-2 transition-all duration-300 hover:shadow-lg border-gray-200 hover:border-green-300 bg-white hover:shadow-md;
+}
+
+.todayCard {
+    @apply border-green-400 bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg ring-2 ring-green-200;
+}
+
+.dayHeader {
+    @apply flex justify-between items-center mb-4;
+}
+
+.dayTitle {
+    @apply font-bold text-gray-800;
+}
+
+.dayMeta {
+    @apply flex items-center gap-2;
+}
+
+.dayDate {
+    @apply text-xs text-gray-600;
+}
+
+.todayBadge {
+    @apply px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold rounded-full shadow-md;
+}
+
+.meals {
+    @apply space-y-3 mb-4;
+}
+
+.mealCard {
+    @apply p-4 rounded-xl border-l-4 transition-all hover:shadow-sm;
+}
+
+.mealBreakfast {
+    @apply bg-yellow-50 border-yellow-400;
+}
+
+.mealLunch {
+    @apply bg-orange-50 border-orange-400;
+}
+
+.mealDinner {
+    @apply bg-purple-50 border-purple-400;
+}
+
+.mealSnack {
+    @apply bg-pink-50 border-pink-400;
+}
+
+.mealHeader {
+    @apply flex items-center gap-2 mb-2;
+}
+
+.mealIcon {
+    @apply text-lg;
+}
+
+.mealName {
+    @apply font-semibold text-gray-800 text-sm;
+}
+
+.mealContent {
+    @apply text-xs text-gray-700 leading-relaxed break-words;
+}
+
+.calorieFooter {
+    @apply flex justify-center;
+}
+
+.calorieBadge {
+    @apply inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 text-sm font-bold rounded-full border border-green-200 shadow-sm;
+}
+
+.calorieIcon {
+    @apply w-4 h-4;
+}
+
+.emptyState {
+    @apply md:col-span-2 text-center py-12;
+}
+
+.emptyTitle {
+    @apply text-lg font-semibold;
+}
+
+.emptyText {
+    @apply text-sm text-gray-500 mt-2;
+}

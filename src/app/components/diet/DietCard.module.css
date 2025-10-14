@@ -1,0 +1,95 @@
+.card {
+    @apply backdrop-blur-sm rounded-2xl p-6 shadow-medium border hover:shadow-lg transition-all duration-200 cursor-pointer hover:transform hover:-translate-y-1;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-color: rgba(240, 253, 130, 0.3);
+}
+
+.cardHeader {
+    @apply flex justify-between items-start mb-4;
+}
+
+.cardInfo {
+    @apply flex items-start gap-3 flex-1 min-w-0;
+}
+
+.iconWrapper {
+    @apply w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex items-center
+        justify-center shadow-md flex-shrink-0;
+}
+
+.icon {
+    @apply text-xl;
+}
+
+.titleSection {
+    @apply flex-1 min-w-0;
+}
+
+.title {
+    @apply text-lg font-bold text-gray-800 mb-2 truncate;
+}
+
+.meta {
+    @apply flex flex-wrap gap-2 text-sm text-gray-500;
+}
+
+.metaItem {
+    @apply flex items-center gap-1;
+}
+
+.metaIcon {
+    @apply w-3 h-3 text-green-500;
+}
+
+.separator {
+    @apply text-gray-400;
+}
+
+.actions {
+    @apply flex gap-2 flex-shrink-0 ml-4;
+}
+
+.actionBtn {
+    @apply p-2 bg-gray-50 text-gray-400 rounded-lg hover:bg-yellow-50 hover:text-yellow-500 transition-colors duration-200;
+}
+
+.actionBtn.active {
+    @apply bg-yellow-50 text-yellow-500;
+}
+
+.actionBtn.activeGreen {
+    @apply bg-green-50 text-green-600;
+}
+
+.deleteBtn {
+    @apply p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors duration-200;
+}
+
+.actionIcon {
+    @apply w-4 h-4;
+}
+
+.cardBody {
+    @apply space-y-2;
+}
+
+.description {
+    @apply text-gray-600 text-sm;
+}
+
+.badges {
+    @apply flex items-center gap-3 flex-wrap;
+}
+
+.calorieBadge {
+    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800;
+}
+
+.badgeIcon {
+    @apply w-3 h-3;
+}
+
+.weekBadge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium text-gray-800;
+    background-color: rgba(240, 253, 130, 0.2);
+}
