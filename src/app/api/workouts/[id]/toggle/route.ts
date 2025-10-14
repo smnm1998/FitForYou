@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await getServerSession(authOptions);
@@ -18,7 +18,8 @@ export async function PATCH(
         }
 
         const userId = parseInt(session.user.id);
-        const workoutId = parseInt(params.id);
+        const { id } = await params;
+        const workoutId = parseInt(id);
         const { field } = await request.json();
 
         if (!["isFavorite", "isThisWeek"].includes(field)) {
