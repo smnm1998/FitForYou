@@ -15,7 +15,7 @@ export default function HomePage() {
                 {/* 로고 */}
                 <div className={styles.logoSection}>
                     <Image
-                        src="/Logo.png"
+                        src="/logo.png"
                         alt="FitForYou 로고"
                         width={300}
                         height={120}

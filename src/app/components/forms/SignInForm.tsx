@@ -63,7 +63,7 @@ export default function SignInForm() {
 
             <div className={styles.logoContainer}>
                 <Image
-                    src="/Logo.png"
+                    src="/logo.png"
                     alt="FitForYou_Logo"
                     width={300}
                     height={120}
