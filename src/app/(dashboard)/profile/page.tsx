@@ -17,12 +17,14 @@ import { UserProfile } from "@/lib/hooks/useEditProfile";
 import EditProfileModal from "@/app/components/modals/EditProfileModal";
 import DeleteAccountModal from "@/app/components/modals/DeleteAccountModal";
 import { formatGender, calculateAge } from "@/utils/profile.util";
+import FavoritesModal from "@/app/components/modals/FavoritesModal";
 import styles from "./ProfilePage.module.css";
 
 export default function ProfilePage() {
     const { data: session } = useSession();
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isFavoritesModalOpen, setIsFavoritesModalOpen] = useState(false);
 
     const { data: profileData, isLoading } = useQuery({
         queryKey: ["user-profile"],
@@ -114,7 +116,11 @@ export default function ProfilePage() {
                 </section>
 
                 <section className={styles.menuSection}>
-                    <div className={styles.menuCard}>
+                    <div
+                        className={styles.menuCard}
+                        onClick={() => setIsFavoritesModalOpen(true)}
+                        style={{ cursor: "pointer" }}
+                    >
                         <div className={styles.menuContent}>
                             <div className={styles.menuIconRed}>
                                 <HeartIcon className="w-6 h-6 text-red-500" />
@@ -128,7 +134,6 @@ export default function ProfilePage() {
                                 </p>
                             </div>
                         </div>
-                        <div className={styles.menuArrow}>›</div>
                     </div>
 
                     <div className={styles.menuCard}>
@@ -186,6 +191,11 @@ export default function ProfilePage() {
             <DeleteAccountModal
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
+            />
+
+            <FavoritesModal
+                isOpen={isFavoritesModalOpen}
+                onClose={() => setIsFavoritesModalOpen(false)}
             />
         </div>
     );

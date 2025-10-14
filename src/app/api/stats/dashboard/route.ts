@@ -115,32 +115,56 @@ export async function GET(request: NextRequest) {
         monthEnd.setHours(23, 59, 59, 999);
 
         // 이번 주/월 데이터도 병렬로 조회 (재시도 로직 포함)
-        const [thisWeekWorkouts, thisMonthCaloriesData] = await Promise.all([
+        const [thisWeekDiets, thisWeekWorkouts, thisMonthWorkoutCalories, thisMonthDietCalories] = await Promise.all([
+            // 이번 주 식단 (isThisWeek = true)
+            retryDatabaseOperation(() =>
+                prisma.savedDiet.count({
+                    where: { userId, isThisWeek: true }
+                })
+            ).catch(err => {
+                console.error('Error fetching week diets:', err);
+                return 0;
+            }),
+            // 이번 주 운동 (isThisWeek = true)
             retryDatabaseOperation(() =>
                 prisma.savedWorkout.count({
-                    where: { userId, date: { gte: weekStart, lte: weekEnd } }
+                    where: { userId, isThisWeek: true }
                 })
             ).catch(err => {
                 console.error('Error fetching week workouts:', err);
                 return 0;
             }),
+            // 이번 달 운동 칼로리 (소모)
             retryDatabaseOperation(() =>
                 prisma.savedWorkout.aggregate({
                     _sum: { estimatedCalories: true },
                     where: { userId, date: { gte: monthStart, lte: monthEnd } }
                 })
             ).catch(err => {
-                console.error('Error fetching month calories:', err);
+                console.error('Error fetching month workout calories:', err);
                 return { _sum: { estimatedCalories: 0 } };
+            }),
+            // 이번 달 식단 칼로리 (섭취)
+            retryDatabaseOperation(() =>
+                prisma.savedDiet.aggregate({
+                    _sum: { totalCalories: true },
+                    where: { userId, date: { gte: monthStart, lte: monthEnd } }
+                })
+            ).catch(err => {
+                console.error('Error fetching month diet calories:', err);
+                return { _sum: { totalCalories: 0 } };
             })
         ]);
-        
-        const thisMonthCalories = thisMonthCaloriesData._sum.estimatedCalories || 0;
+
+        const workoutCalories = thisMonthWorkoutCalories._sum.estimatedCalories || 0;
+        const dietCalories = thisMonthDietCalories._sum.totalCalories || 0;
+        // 순 소모 칼로리 = 운동 칼로리 - 식단 칼로리
+        const thisMonthCalories = Math.max(0, workoutCalories - dietCalories);
 
         const overview = {
             totalDiets,
             totalWorkouts,
-            thisWeekWorkouts,
+            thisWeekWorkouts: thisWeekDiets + thisWeekWorkouts,
             thisMonthCalories,
         };
 
