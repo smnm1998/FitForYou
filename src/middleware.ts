@@ -34,5 +34,5 @@ export async function middleware(req: NextRequest) {
 
 // 경로 지정
 export const config = {
-    matcher: ["/((?!api|_next/static|_next/image|favicon.io).*)"],
+    matcher: ["/((?!api|_next|favicon.ico|.*\\..*).*)"],
 };
